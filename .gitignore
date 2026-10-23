@@ -1,6 +1,7 @@
 # Large disk images and rootfs build targets
 *.img
 *.ext4
+*.zst
 build/rootfs.ext4
 arch_base/
 /build/*.ext4
