@@ -18,6 +18,18 @@
 
 ## 🌟 Architecture & Highlights
 
+- **Robotics & Sensor Fusion Hub (`aether-roboticsd`) (Phase 5)**:
+  - Real-time 6-DoF IMU attitude calculation, 360-degree LiDAR sector mapping, and obstacle collision perimeter defense.
+  - ROS 2-compatible MCP tool primitives (`robot.navigate`, `sensor.lidar_scan`, `sensor.imu_attitude`, `robot.teleop`).
+  - Autonomous waypoint pathfinding and spatial pose tracker.
+- **OS-Native MLOps & Compute Acceleration (`aether-mlopsd`) (Phase 4)**:
+  - Manifest-driven Model Registry (`/var/lib/aether/models/registry.json`) for local SLMs, ONNX models, and quantized GGUF weights.
+  - Hardware profiler with AVX2/FMA SIMD acceleration detection and float throughput benchmarks.
+  - Multi-tier inference routing across micro-grammar, local SLM reasoning, and cloud models.
+- **Terminal AI Developer Copilot (`aether-assist`, `aether-fix`, `aether-git-commit`)**:
+  - Natural language CLI command synthesis (`aetherctl assist "<query>"`).
+  - Automated command failure analysis and intelligent one-click repair (`aetherctl fix`).
+  - Context-aware conventional Git commit authoring (`aetherctl git`).
 - **Spatial Neural HUD (`aether-hud`) (Phase 3)**:
   - Holographic floating terminal HUD with Catppuccin Mocha glassmorphic palette.
   - Animated Quantum Core Iris reflecting live biometric trust, attention, and cognitive load states.

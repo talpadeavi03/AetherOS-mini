@@ -2,7 +2,7 @@
 """
 AetherOS CLI Control Utility (`aetherctl`)
 Unified control interface for Kernel MCP, Sensory Core, Multi-Agent Swarm,
-Native MLOps Engine, and Terminal AI Developer Copilot.
+Native MLOps Engine, Terminal AI Copilot, and Robotics Sensor Fusion Hub.
 """
 
 import sys
@@ -18,6 +18,7 @@ MEM_SOCK = "/run/aether/mem.sock"
 INTENT_SOCK = "/run/aether/intent.sock"
 AGENT_SOCK = "/run/aether/agent.sock"
 MLOPS_SOCK = "/run/aether/mlops.sock"
+ROBOT_SOCK = "/run/aether/robotics.sock"
 
 def send_unix_request(sock_path, req, timeout=2.0):
     if not os.path.exists(sock_path):
@@ -40,7 +41,7 @@ def print_banner():
  | |_| / _ \\ __| '_ \\ / _ \\ '__| | | \\___ \\ 
  |  _  | __/ |_| | | |  __/ |  | |_| |___) |
  |_| |_|\\___|\\__|_| |_|\\___|_|   \\___/|____/ 
- AetherOS - AI-Native Multi-Agent Sensory & MLOps Operating System
+ AetherOS - AI-Native Sensory, Swarm & Robotics Operating System
     """
     print(banner)
 
@@ -53,6 +54,7 @@ def cmd_status():
     int_res = send_unix_request(INTENT_SOCK, {"action": "status"})
     agn_res = send_unix_request(AGENT_SOCK, {"action": "status"})
     mlp_res = send_unix_request(MLOPS_SOCK, {"action": "status"})
+    rob_res = send_unix_request(ROBOT_SOCK, {"action": "status"})
 
     print("════════════════════════════════════════════════════════════════")
     print(" [1] KERNEL MCP NEUROBUS (aether-mcpd)")
@@ -130,8 +132,23 @@ def cmd_status():
         bench = mlp_res.get("last_benchmark", {})
         active = mlp_res.get("active_models", {})
         print(f"     Compute Engine:   {hw.get('cpu_model', 'x86_64')} ({hw.get('vector_compute_rating', 'AVX2')})")
-        print(f"     SIMD Throughput:  {bench.get('simd_throughput_mflops', 128.4)} MFLOPS (Benchmark: {bench.get('duration_ms', 1.2)}ms)")
+        print(f"     SIMD Throughput:  {bench.get('simd_throughput_mflops', 128.4)} MFLOPS")
         print(f"     Active Models:    Intent: {active.get('intent')} | Vision: {active.get('vision')}")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [8] ROBOTICS & SENSOR FUSION (aether-roboticsd)")
+    if rob_res:
+        mode = rob_res.get('robot_mode', 'AUTONOMOUS_READY')
+        bat = rob_res.get('battery', {}).get('percentage', 94.5)
+        pose = rob_res.get('kinematics', {}).get('pose', {})
+        lidar = rob_res.get('lidar_mapping', {})
+        imu = rob_res.get('imu_attitude', {})
+        print(f"     Robot Mode:       {mode} (Battery: {bat}%)")
+        print(f"     Spatial Pose:     X: {pose.get('x', 0):.2f}m, Y: {pose.get('y', 0):.2f}m, Yaw: {pose.get('theta_deg', 0):.1f}°")
+        print(f"     LiDAR Perimeter:  Min Distance: {lidar.get('min_distance_m', 0):.2f}m ({lidar.get('scan_rate_hz', 10)}Hz)")
+        print(f"     IMU 6-DoF:        Roll: {imu.get('roll_deg', 0)}°, Pitch: {imu.get('pitch_deg', 0)}° ({imu.get('calibration_status', 'CALIBRATED')})")
     else:
         print("     Status:           OFFLINE or INITIALIZING")
     print("════════════════════════════════════════════════════════════════\n")
@@ -217,6 +234,27 @@ def cmd_mlops(subargs):
         res = send_unix_request(MLOPS_SOCK, {"action": "switch", "tier": tier, "model_id": model_id})
         print(json.dumps(res, indent=2) if res else "[aetherctl] aether-mlopsd offline.")
 
+def cmd_robot(subargs):
+    if not subargs or subargs[0] == "status":
+        res = send_unix_request(ROBOT_SOCK, {"action": "status"})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-roboticsd offline.")
+    elif subargs[0] == "navigate":
+        x = float(subargs[1]) if len(subargs) > 1 else 1.0
+        y = float(subargs[2]) if len(subargs) > 2 else 0.5
+        res = send_unix_request(ROBOT_SOCK, {"action": "navigate", "x": x, "y": y})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-roboticsd offline.")
+    elif subargs[0] == "lidar":
+        res = send_unix_request(ROBOT_SOCK, {"action": "lidar"})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-roboticsd offline.")
+    elif subargs[0] == "imu":
+        res = send_unix_request(ROBOT_SOCK, {"action": "imu"})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-roboticsd offline.")
+    elif subargs[0] == "teleop":
+        lin = float(subargs[1]) if len(subargs) > 1 else 0.3
+        ang = float(subargs[2]) if len(subargs) > 2 else 0.0
+        res = send_unix_request(ROBOT_SOCK, {"action": "teleop", "linear": lin, "angular": ang})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-roboticsd offline.")
+
 def cmd_assist(subargs):
     query = " ".join(subargs) if subargs else "list open ports"
     script = "/usr/bin/aether-assist"
@@ -275,26 +313,29 @@ def main():
     if len(sys.argv) < 2:
         cmd_status()
         print("Commands:")
-        print("  aetherctl status            Show unified sensory & MCP system health")
+        print("  aetherctl status            Show unified sensory, swarm & robotics health")
+        print("  aetherctl robot [cmd]       Inspect or actuate Robotics & Sensor Fusion Hub")
         print("  aetherctl agent [cmd]       Inspect or command Autonomous Agent Swarm (heal/status/devops)")
         print("  aetherctl mlops [cmd]       Inspect MLOps model registry & hardware benchmarks")
         print("  aetherctl assist \"<query>\"  Terminal AI copilot for natural language commands")
         print("  aetherctl fix               Analyze last shell failure and generate resolution")
         print("  aetherctl git               Auto-generate conventional git commit message")
         print("  aetherctl hud               Launch Spatial Neural HUD")
+        print("  aetherctl test              Run automated subsystem verification test suite")
         print("  aetherctl vision            Inspect real-time gaze, fatigue & biometrics")
         print("  aetherctl voice speak <t>   Synthesize speech via neural/phonetic TTS")
         print("  aetherctl memory store <c>  Store episodic note in vector vault")
         print("  aetherctl memory search <q> Query memory using cosine vector search")
         print("  aetherctl memory graph      Inspect user & system knowledge graph")
         print("  aetherctl intent <prompt>   Route natural language intent (<15ms)")
-        print("  aetherctl chat <prompt>     Ask the onboard SLM Copilot (with TTS)")
         print("  aetherctl compact           Trigger kernel memory compaction")
         return
 
     cmd = sys.argv[1]
     if cmd == "status":
         cmd_status()
+    elif cmd in ["robot", "robotics"]:
+        cmd_robot(sys.argv[2:])
     elif cmd == "agent":
         cmd_agent(sys.argv[2:])
     elif cmd == "mlops":

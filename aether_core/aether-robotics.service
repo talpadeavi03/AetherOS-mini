@@ -1,0 +1,15 @@
+[Unit]
+Description=AetherOS Robotics & Real-Time Sensor Fusion Hub
+After=aether-mcp.service aether-vision.service
+Wants=aether-mcp.service aether-vision.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/aether-roboticsd
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
