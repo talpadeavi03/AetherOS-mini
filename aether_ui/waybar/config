@@ -27,6 +27,7 @@
     "modules-right": [
         "custom/padd",
         "custom/l_end",
+        "custom/sensory",
         "custom/ai",
         "cpu",
         "memory",
@@ -34,6 +35,12 @@
         "custom/r_end",
         "custom/padd"
     ],
+
+    "custom/sensory": {
+        "format": "󰈈  Vision Active",
+        "tooltip": "Aether Vision & Biometrics Online",
+        "on-click": "kitty -T 'Aether Sensory Telemetry' -e aetherctl vision"
+    },
 
     "custom/power_menu": {
         "format": "  AetherOS",

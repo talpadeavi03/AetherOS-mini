@@ -1,0 +1,16 @@
+[Unit]
+Description=AetherOS Voice Intelligence & Speech Synthesizer Daemon
+After=network.target aether-mcp.service sound.target
+Wants=aether-mcp.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/bin/aether-voiced
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

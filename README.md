@@ -6,14 +6,19 @@
 
 ## 📸 Desktop Preview
 
-![AetherOS Hyprdots Desktop](hyprdots_desktop.png)
+![AetherOS Phase 2 Sensory Core Desktop](phase2_live.png)
 
 ---
 
 ## 🌟 Highlights
 
+- **Ambient Sensory Pipeline (Phase 2)**:
+  - **Vision Engine (`aether-visiond`)**: Real-time biometric verification, gaze vector tracking, Eye Aspect Ratio (EAR) blink rate & posture monitoring.
+  - **Voice Intelligence (`aether-voiced`)**: Low-latency neural and phonetic speech synthesis (`espeak-ng`), wake-word activity, and voice mode controls.
+  - **Vector Memory (`aether-memd`)**: Persistent SQLite vector vault with cosine similarity retrieval and user/system Knowledge Graph.
+  - **Micro-Intent Router (`aether-intentd`)**: Sub-15ms deterministic natural language intent resolution mapping speech or text to kernel and system actions.
 - **Hyprdots Aesthetic**: Catppuccin Mocha / Rosé Pine color scheme, 10px rounded corners, dual-pass frosted glass blur, 45-degree border gradients (`rgba(ca9ee6ff) rgba(f2d5cfff)`), and smooth bezier animations.
-- **Floating Capsule Waybar**: Modular pill-style bar with workspace switcher, date/time, live CPU/RAM metrics, and an active **`󰚩 AI Copilot`** status pill.
+- **Floating Capsule Waybar**: Modular pill-style bar with workspace switcher, date/time, live CPU/RAM metrics, active **`󰈈 Vision Active`** sensory pill, and **`󰚩 AI Copilot`** status indicator.
 - **Rofi Application Launcher**: Styled with dark glass theme (`style_1.rasi`) mapped to `Super + Space`.
 - **Aether Kernel MCP Daemon (`aether-mcpd`)**: Exposes system threads, memory, cgroups, and PSI pressure metrics to local SLM/AI agents over Unix socket (`/run/aether/mcp.sock`) and HTTP (`:9090`).
 - **AI Copilot CLI (`aetherctl`)**: Conversational CLI utility for inspecting system health, compacting memory, and communicating with the kernel AI NeuroBus.

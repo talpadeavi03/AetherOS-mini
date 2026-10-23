@@ -31,6 +31,7 @@ tooltip {
 #custom-power_menu,
 #custom-cliphist,
 #clock,
+#custom-sensory,
 #custom-ai,
 #cpu,
 #memory,
@@ -92,6 +93,12 @@ tooltip {
     color: #cdd6f4;
     font-weight: 600;
     padding: 0 12px;
+}
+
+#custom-sensory {
+    color: #89dceb;
+    padding: 0 8px;
+    font-size: 11px;
 }
 
 #custom-ai {
