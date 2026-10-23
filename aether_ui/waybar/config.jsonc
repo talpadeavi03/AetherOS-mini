@@ -39,7 +39,7 @@
     "custom/sensory": {
         "format": "󰈈  Vision Active",
         "tooltip": "Aether Vision & Biometrics Online",
-        "on-click": "kitty -T 'Aether Sensory Telemetry' -e aetherctl vision"
+        "on-click": "foot -T 'Aether Sensory Telemetry' -e aetherctl vision"
     },
 
     "custom/power_menu": {
@@ -63,9 +63,9 @@
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
     "custom/ai": {
-        "format": "󰚩  AI Copilot",
-        "tooltip": "Connected to Kernel NeuroBus via MCP",
-        "on-click": "foot -T 'Aether AI Copilot' -e /usr/bin/aetherctl"
+        "format": "󰚩  Neural HUD",
+        "tooltip": "AetherOS Spatial Neural HUD & Agent Swarm",
+        "on-click": "foot -T 'AetherOS Neural HUD' -e /usr/bin/aether-hud"
     },
     "cpu": {
         "format": "  {usage}%",

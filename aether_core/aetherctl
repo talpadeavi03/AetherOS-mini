@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
 AetherOS CLI Control Utility (`aetherctl`)
-Unified control interface for Kernel MCP, Vision, Voice, Memory, and Intent Engines.
+Unified control interface for Kernel MCP, Sensory Core, Multi-Agent Swarm, and Intent Engine.
 """
 
 import sys
 import os
 import json
 import socket
-import urllib.request
-import urllib.error
+import subprocess
 
 MCP_SOCK = "/run/aether/mcp.sock"
 VISION_SOCK = "/run/aether/vision.sock"
 VOICE_SOCK = "/run/aether/voice.sock"
 MEM_SOCK = "/run/aether/mem.sock"
 INTENT_SOCK = "/run/aether/intent.sock"
+AGENT_SOCK = "/run/aether/agent.sock"
 
 def send_unix_request(sock_path, req, timeout=2.0):
     if not os.path.exists(sock_path):
@@ -25,7 +25,7 @@ def send_unix_request(sock_path, req, timeout=2.0):
         s.settimeout(timeout)
         s.connect(sock_path)
         s.sendall(json.dumps(req).encode("utf-8"))
-        data = s.recv(32768).decode("utf-8")
+        data = s.recv(65536).decode("utf-8")
         s.close()
         return json.loads(data)
     except Exception:
@@ -38,7 +38,7 @@ def print_banner():
  | |_| / _ \\ __| '_ \\ / _ \\ '__| | | \\___ \\ 
  |  _  | __/ |_| | | |  __/ |  | |_| |___) |
  |_| |_|\\___|\\__|_| |_|\\___|_|   \\___/|____/ 
- AetherOS - AI-Native Sensory & Intelligence Core
+ AetherOS - AI-Native Multi-Agent Sensory Operating System
     """
     print(banner)
 
@@ -49,6 +49,7 @@ def cmd_status():
     voc_res = send_unix_request(VOICE_SOCK, {"action": "status"})
     mem_res = send_unix_request(MEM_SOCK, {"action": "stats"})
     int_res = send_unix_request(INTENT_SOCK, {"action": "status"})
+    agn_res = send_unix_request(AGENT_SOCK, {"action": "status"})
 
     print("════════════════════════════════════════════════════════════════")
     print(" [1] KERNEL MCP NEUROBUS (aether-mcpd)")
@@ -103,6 +104,21 @@ def cmd_status():
             print(f"     Last Dispatched:  '{last.get('intent')}' ({last.get('duration_ms')}ms)")
     else:
         print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [6] AUTONOMOUS AGENT SWARM (aether-agentd)")
+    if agn_res and "agents" in agn_res:
+        ag = agn_res["agents"]
+        s_sent = ag.get("sentinel", {}).get("status", "NOMINAL")
+        s_sec = ag.get("security", {}).get("status", "ACTIVE")
+        s_dev = ag.get("devops", {}).get("status", "CLEAN")
+        s_hlth = ag.get("health", {}).get("status", "OPTIMAL")
+        print(f"     Sentinel Agent:   {s_sent} (Heals: {ag.get('sentinel', {}).get('healed_count', 0)})")
+        print(f"     Security Agent:   {s_sec} (Biometrics: {ag.get('security', {}).get('auth', {}).get('user', 'aether')})")
+        print(f"     DevOps Agent:     {s_dev}")
+        print(f"     Health Agent:     {s_hlth}")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
     print("════════════════════════════════════════════════════════════════\n")
 
 def cmd_vision():
@@ -147,6 +163,29 @@ def cmd_memory(subargs):
         res = send_unix_request(MEM_SOCK, {"action": "graph"})
         print(json.dumps(res, indent=2))
 
+def cmd_agent(subargs):
+    if not subargs or subargs[0] == "status":
+        res = send_unix_request(AGENT_SOCK, {"action": "status"})
+        if not res:
+            print("[aetherctl] aether-agentd is not responding.")
+            return
+        print(json.dumps(res, indent=2))
+    elif subargs[0] in ["heal", "self-heal"]:
+        res = send_unix_request(AGENT_SOCK, {"action": "dispatch", "agent": "sentinel", "agent_action": "heal", "params": {"reason": "CLI manual request"}})
+        print(f"[*] Sentinel Self-Healing: {json.dumps(res, indent=2)}")
+    elif subargs[0] in ["prepare", "devops"]:
+        profile = subargs[1] if len(subargs) > 1 else "general"
+        res = send_unix_request(AGENT_SOCK, {"action": "dispatch", "agent": "devops", "agent_action": "prepare", "params": {"profile": profile}})
+        print(f"[*] DevOps Environment: {json.dumps(res, indent=2)}")
+    elif subargs[0] == "security":
+        res = send_unix_request(AGENT_SOCK, {"action": "status"})
+        if res and "agents" in res:
+            print(json.dumps(res["agents"].get("security", {}), indent=2))
+    elif subargs[0] == "health":
+        res = send_unix_request(AGENT_SOCK, {"action": "status"})
+        if res and "agents" in res:
+            print(json.dumps(res["agents"].get("health", {}), indent=2))
+
 def cmd_intent(subargs):
     prompt = " ".join(subargs) if subargs else "diagnose system"
     res = send_unix_request(INTENT_SOCK, {"action": "route", "prompt": prompt})
@@ -164,18 +203,25 @@ def cmd_chat(prompt):
     if res:
         print(f"\n[Aether Intent]: {res.get('intent')} (Tier: {res.get('tier')}, {res.get('latency_ms')}ms)")
         print(f"[Aether Brain]:  {res.get('result')}\n")
-        # Speak response via TTS
         text = str(res.get('result'))
         if len(text) < 120 and "PSI Pressure" not in text:
             send_unix_request(VOICE_SOCK, {"action": "speak", "text": text})
     else:
         print("[aetherctl] Unable to connect to Intent Engine.")
 
+def cmd_hud():
+    hud_bin = "/usr/bin/aether-hud"
+    if not os.path.exists(hud_bin):
+        hud_bin = os.path.join(os.path.dirname(__file__), "aether_hud.py")
+    subprocess.run([hud_bin])
+
 def main():
     if len(sys.argv) < 2:
         cmd_status()
         print("Commands:")
         print("  aetherctl status            Show unified sensory & MCP system health")
+        print("  aetherctl agent [cmd]       Inspect or command Autonomous Agent Swarm (heal/status/devops)")
+        print("  aetherctl hud               Launch Spatial Neural HUD")
         print("  aetherctl vision            Inspect real-time gaze, fatigue & biometrics")
         print("  aetherctl voice speak <t>   Synthesize speech via neural/phonetic TTS")
         print("  aetherctl voice mode <m>    Set voice mode (interactive/meeting_mode)")
@@ -191,6 +237,10 @@ def main():
     cmd = sys.argv[1]
     if cmd == "status":
         cmd_status()
+    elif cmd == "agent":
+        cmd_agent(sys.argv[2:])
+    elif cmd == "hud":
+        cmd_hud()
     elif cmd == "vision":
         cmd_vision()
     elif cmd == "voice":

@@ -1,0 +1,15 @@
+[Unit]
+Description=AetherOS Multi-Agent Swarm Orchestrator
+After=aether-mcp.service aether-vision.service aether-voice.service aether-memory.service aether-intent.service
+Wants=aether-mcp.service aether-vision.service aether-voice.service aether-memory.service aether-intent.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/aether-agentd
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

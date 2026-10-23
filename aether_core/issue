@@ -1,14 +1,16 @@
 
-  ___     _   _               ___  ____  
- / _ \___| |_| |__   ___ _ __/ _ \/ ___| 
-| |_| / _ \ __| '_ \ / _ \ '__| | | \___ \ 
-|  _  | __/ |_| | | |  __/ |  | |_| |___) |
-|_| |_|\___|\__|_| |_|\___|_|   \___/|____/ 
+   ___     _   _               ___  ____  
+  / _ \___| |_| |__   ___ _ __/ _ \/ ___| 
+ | |_| / _ \ __| '_ \ / _ \ '__| | | \___ \ 
+ |  _  | __/ |_| | | |  __/ |  | |_| |___) |
+ |_| |_|\___|\__|_| |_|\___|_|   \___/|____/ 
 
-AetherOS Mini v1.0.0 (Arch Linux Base x86_64)
+AetherOS v1.0.0 (Arch Linux Base x86_64) - Phase 3 Swarm Active
 Kernel \r on an \m (\l)
 
-• AI / MCP Daemon: Active at /run/aether/mcp.sock & :9090
-• Run 'aetherctl' for system diagnostics, thread tuning & AI Copilot
-• Next Stage: Hyprland Wayland Compositor Ready
-
+• Kernel MCP NeuroBus:  /run/aether/mcp.sock & :9090
+• Sensory Core:         Vision (:9091), Voice (:9092)
+• Cognitive & Vector:   Memory Vault (:9093), Micro-Intent (:9094)
+• Autonomous Swarm:     Sentinel, Security, DevOps, Health (:9095)
+• Spatial Neural HUD:   Press Super + Space or run 'aether-hud'
+• Unified Control CLI:  'aetherctl'
