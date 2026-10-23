@@ -1,0 +1,55 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 32,
+    "spacing": 8,
+    "margin-top": 6,
+    "margin-left": 12,
+    "margin-right": 12,
+    "modules-left": [
+        "custom/logo",
+        "hyprland/workspaces"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "custom/ai",
+        "cpu",
+        "memory",
+        "custom/power"
+    ],
+    "custom/logo": {
+        "format": " AetherOS ",
+        "tooltip": false,
+        "on-click": "wofi --show drun"
+    },
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "on-click": "activate"
+    },
+    "clock": {
+        "format": "{:%I:%M %p  •  %a, %b %d}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "custom/ai": {
+        "format": "● AI Copilot",
+        "tooltip": "Connected to Kernel NeuroBus via MCP",
+        "on-click": "foot -T 'Aether AI Copilot' -e /usr/bin/aetherctl"
+    },
+    "cpu": {
+        "format": "CPU: {usage}%",
+        "tooltip": true,
+        "on-click": "foot -e htop"
+    },
+    "memory": {
+        "format": "RAM: {used:0.1f}GB",
+        "tooltip": true,
+        "on-click": "foot -e /usr/bin/aetherctl compact"
+    },
+    "custom/power": {
+        "format": "⏻",
+        "tooltip": "Power Menu",
+        "on-click": "poweroff"
+    }
+}

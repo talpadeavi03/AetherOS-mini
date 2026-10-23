@@ -1,0 +1,74 @@
+* {
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+window#waybar {
+    background-color: rgba(18, 22, 32, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: #f1f5f9;
+}
+
+#custom-logo {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0 12px;
+    border-radius: 8px;
+    margin: 3px 6px;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    background-color: transparent;
+    color: #94a3b8;
+    border-radius: 6px;
+    margin: 3px 2px;
+}
+
+#workspaces button.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+#clock {
+    color: #f8fafc;
+    font-weight: 600;
+    padding: 0 14px;
+}
+
+#custom-ai {
+    background-color: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    border-radius: 8px;
+    padding: 0 10px;
+    margin: 3px 4px;
+    font-weight: 600;
+}
+
+#cpu {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-radius: 8px;
+    padding: 0 10px;
+    margin: 3px 4px;
+}
+
+#memory {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border-radius: 8px;
+    padding: 0 10px;
+    margin: 3px 4px;
+}
+
+#custom-power {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-radius: 8px;
+    padding: 0 10px;
+    margin: 3px 4px;
+}
