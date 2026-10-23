@@ -265,6 +265,12 @@ def cmd_hud():
         hud_bin = os.path.join(os.path.dirname(__file__), "aether_hud.py")
     subprocess.run([hud_bin])
 
+def cmd_test():
+    test_script = "/usr/bin/aether-test"
+    if not os.path.exists(test_script):
+        test_script = os.path.join(os.path.dirname(__file__), "..", "scripts", "test_all_subsystems.py")
+    subprocess.run([sys.executable, test_script])
+
 def main():
     if len(sys.argv) < 2:
         cmd_status()
@@ -301,6 +307,8 @@ def main():
         cmd_git()
     elif cmd == "hud":
         cmd_hud()
+    elif cmd in ["test", "self-test", "verify"]:
+        cmd_test()
     elif cmd == "vision":
         cmd_vision()
     elif cmd == "voice":
