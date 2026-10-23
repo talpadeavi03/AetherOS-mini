@@ -79,6 +79,9 @@
 
 ## 🚀 Running & Testing
 
+> 📖 **Comprehensive Component-by-Component Testing Guide:**  
+> For complete instructions, curl commands, and expected JSON outputs for every daemon, see [docs/TESTING_AND_VERIFICATION_GUIDE.md](docs/TESTING_AND_VERIFICATION_GUIDE.md).
+
 ### 1. View in Virtual Machine Manager GUI
 Launch Virt-Manager:
 ```bash
@@ -91,7 +94,17 @@ Or connect directly via `virt-viewer`:
 virt-viewer -c qemu:///system AetherOS-Mini
 ```
 
-### 2. Multi-Agent Swarm & CLI Commands
+### 2. Run Automated Test Suite (100% Pass)
+Inside the OS terminal:
+```bash
+aetherctl test
+```
+Or from the host machine against the VM:
+```bash
+python3 scripts/test_vm_network_and_local.py
+```
+
+### 3. Subsystem CLI Commands Quick Reference
 Inside the running OS or over serial/SSH:
 ```bash
 # Unified status across all 6 core daemons
