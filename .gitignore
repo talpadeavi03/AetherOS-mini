@@ -1,0 +1,10 @@
+# Large disk images and rootfs build targets
+*.img
+*.ext4
+build/rootfs.ext4
+arch_base/
+/build/*.ext4
+
+# Temporary screenshots
+crop_error.png
+arch_screen.png

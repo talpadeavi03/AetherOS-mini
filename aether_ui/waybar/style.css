@@ -1,74 +1,138 @@
 * {
-    font-family: "Noto Sans", "DejaVu Sans", sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    border: none;
+    border-radius: 0px;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-weight: bold;
+    font-size: 11px;
+    min-height: 12px;
 }
+
+@define-color bar-bg rgba(0, 0, 0, 0);
+@define-color main-bg rgba(17, 17, 27, 0.92);
+@define-color main-fg #cdd6f4;
+@define-color wb-act-bg #b4befe;
+@define-color wb-act-fg #11111b;
+@define-color wb-hvr-bg #f5c2e7;
+@define-color wb-hvr-fg #11111b;
+@define-color border-col rgba(203, 166, 247, 0.4);
 
 window#waybar {
-    background-color: rgba(18, 22, 32, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    color: #f1f5f9;
+    background: @bar-bg;
 }
 
-#custom-logo {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    color: #ffffff;
-    font-weight: bold;
-    padding: 0 12px;
+tooltip {
+    background: @main-bg;
+    color: @main-fg;
     border-radius: 8px;
-    margin: 3px 6px;
+    border: 1px solid @border-col;
+    padding: 6px;
+}
+
+#custom-power_menu,
+#custom-cliphist,
+#clock,
+#custom-ai,
+#cpu,
+#memory,
+#custom-power,
+#workspaces,
+#custom-l_end,
+#custom-r_end {
+    color: @main-fg;
+    background: @main-bg;
+    opacity: 1;
+    margin: 4px 0px 4px 0px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+#custom-power_menu {
+    color: #89b4fa;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#workspaces {
+    padding: 0px;
 }
 
 #workspaces button {
-    padding: 0 8px;
-    background-color: transparent;
-    color: #94a3b8;
-    border-radius: 6px;
-    margin: 3px 2px;
+    box-shadow: none;
+    text-shadow: none;
+    padding: 0px;
+    border-radius: 9px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    margin-left: 2px;
+    padding-left: 6px;
+    padding-right: 6px;
+    margin-right: 2px;
+    color: @main-fg;
 }
 
 #workspaces button.active {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    background: @wb-act-bg;
+    color: @wb-act-fg;
+    margin-left: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 3px;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+}
+
+#workspaces button:hover {
+    background: @wb-hvr-bg;
+    color: @wb-hvr-fg;
+    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
 }
 
 #clock {
-    color: #f8fafc;
+    color: #cdd6f4;
     font-weight: 600;
-    padding: 0 14px;
+    padding: 0 12px;
 }
 
 #custom-ai {
-    background-color: rgba(168, 85, 247, 0.2);
-    color: #c084fc;
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    border-radius: 8px;
-    padding: 0 10px;
+    color: #cba6f7;
+    background: rgba(203, 166, 247, 0.18);
+    border-radius: 12px;
     margin: 3px 4px;
-    font-weight: 600;
+    padding: 0 10px;
+    border: 1px solid rgba(203, 166, 247, 0.35);
 }
 
 #cpu {
-    background-color: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border-radius: 8px;
-    padding: 0 10px;
-    margin: 3px 4px;
+    color: #89b4fa;
+    padding: 0 8px;
 }
 
 #memory {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-    border-radius: 8px;
-    padding: 0 10px;
-    margin: 3px 4px;
+    color: #a6e3a1;
+    padding: 0 8px;
 }
 
 #custom-power {
-    background-color: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border-radius: 8px;
-    padding: 0 10px;
-    margin: 3px 4px;
+    color: #f38ba8;
+    padding-right: 12px;
+    padding-left: 8px;
+}
+
+#custom-l_end {
+    border-radius: 18px 0px 0px 18px;
+    margin-left: 8px;
+    padding-left: 4px;
+    border-left: 1px solid @border-col;
+    border-top: 1px solid @border-col;
+    border-bottom: 1px solid @border-col;
+}
+
+#custom-r_end {
+    border-radius: 0px 18px 18px 0px;
+    margin-right: 8px;
+    padding-right: 4px;
+    border-right: 1px solid @border-col;
+    border-top: 1px solid @border-col;
+    border-bottom: 1px solid @border-col;
 }

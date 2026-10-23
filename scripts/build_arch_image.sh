@@ -4,7 +4,7 @@ set -e
 ROOTFS="arch_base/root.x86_64"
 IMG="aetheros-mini.img"
 ROOTFS_IMG="build/rootfs.ext4"
-SIZE_MB=1800
+SIZE_MB=3500
 
 mkdir -p build
 

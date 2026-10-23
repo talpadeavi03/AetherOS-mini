@@ -1,0 +1,94 @@
+{
+    "layer": "top",
+    "position": "top",
+    "mod": "dock",
+    "height": 34,
+    "exclusive": true,
+    "passthrough": false,
+    "gtk-layer-shell": true,
+    "reload_style_on_change": true,
+
+    "modules-left": [
+        "custom/padd",
+        "custom/l_end",
+        "custom/power_menu",
+        "custom/cliphist",
+        "hyprland/workspaces",
+        "custom/r_end",
+        "custom/padd"
+    ],
+    "modules-center": [
+        "custom/padd",
+        "custom/l_end",
+        "clock",
+        "custom/r_end",
+        "custom/padd"
+    ],
+    "modules-right": [
+        "custom/padd",
+        "custom/l_end",
+        "custom/ai",
+        "cpu",
+        "memory",
+        "custom/power",
+        "custom/r_end",
+        "custom/padd"
+    ],
+
+    "custom/power_menu": {
+        "format": "  AetherOS",
+        "tooltip": false,
+        "on-click": "pkill -x rofi || rofi -show drun"
+    },
+    "custom/cliphist": {
+        "format": "  ",
+        "tooltip": "Clipboard History",
+        "on-click": "pkill -x rofi || /home/aether/.local/share/bin/cliphist.sh c"
+    },
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "on-click": "activate",
+        "all-outputs": true,
+        "sort-by-number": true
+    },
+    "clock": {
+        "format": "  {:%I:%M %p  •  %a, %b %d}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "custom/ai": {
+        "format": "󰚩  AI Copilot",
+        "tooltip": "Connected to Kernel NeuroBus via MCP",
+        "on-click": "foot -T 'Aether AI Copilot' -e /usr/bin/aetherctl"
+    },
+    "cpu": {
+        "format": "  {usage}%",
+        "tooltip": true,
+        "on-click": "foot -e htop"
+    },
+    "memory": {
+        "format": "󰍛  {used:0.1f}GB",
+        "tooltip": true,
+        "on-click": "foot -e /usr/bin/aetherctl compact"
+    },
+    "custom/power": {
+        "format": " ",
+        "tooltip": "Power Menu",
+        "on-click": "poweroff"
+    },
+
+    "custom/l_end": {
+        "format": " ",
+        "interval": "once",
+        "tooltip": false
+    },
+    "custom/r_end": {
+        "format": " ",
+        "interval": "once",
+        "tooltip": false
+    },
+    "custom/padd": {
+        "format": " ",
+        "interval": "once",
+        "tooltip": false
+    }
+}

@@ -1,32 +1,42 @@
-# AetherOS: AI-Native Operating System (Arch Linux + Hyprland)
+# AetherOS: AI-Native Operating System (Arch Linux + Hyprland + Hyprdots)
 
-**AetherOS** is an AI-Native 64-bit operating system combining a modern **Arch Linux** base with the **Hyprland** Wayland compositor, a clean macOS / iOS frosted glass aesthetic, and the **Kernel Model Context Protocol (MCP) Daemon & SLM Intelligence Core**.
+**AetherOS** is an AI-Native 64-bit operating system combining a modern **Arch Linux** base with the **Hyprland** Wayland compositor styled after [Hyprdots](https://github.com/prasanthrangan/hyprdots.git), and the **Kernel Model Context Protocol (MCP) Daemon & SLM Intelligence Core (`aether-mcpd`)**.
+
+---
+
+## 📸 Desktop Preview
+
+![AetherOS Hyprdots Desktop](hyprdots_desktop.png)
 
 ---
 
 ## 🌟 Highlights
 
-- **Hyprland Wayland Desktop**: 12px rounded corners, dual-pass frosted glass blur, fluid spring animations, and subtle gradient borders.
-- **macOS Top Menu Bar (Waybar)**: Frosted glass status bar with active workspaces, system clock, CPU & RAM gauges, and an **AI Copilot** indicator.
-- **Spotlight App Launcher (Wofi)**: Centered modern search launcher triggered by `Super + Space`.
-- **Aether MCP Daemon (`aether-mcpd`)**: Exposes system internals, threads, PSI pressure metrics, and cgroups to local SLM agents and user tools over Unix sockets (`/run/aether/mcp.sock`) and HTTP (`:9090`).
-- **AI Copilot CLI (`aetherctl`)**: Conversational interface for diagnosing system health, tuning thread latency, and compacting kernel memory.
-- **Virtual Machine Manager Ready**: Pre-configured as a libvirt domain (`AetherOS-Mini`) running on KVM.
-- **Physical Bare-Metal Bootable**: Write `aetheros-mini.img` directly to any USB drive using `dd` to boot on physical PC hardware.
+- **Hyprdots Aesthetic**: Catppuccin Mocha / Rosé Pine color scheme, 10px rounded corners, dual-pass frosted glass blur, 45-degree border gradients (`rgba(ca9ee6ff) rgba(f2d5cfff)`), and smooth bezier animations.
+- **Floating Capsule Waybar**: Modular pill-style bar with workspace switcher, date/time, live CPU/RAM metrics, and an active **`󰚩 AI Copilot`** status pill.
+- **Rofi Application Launcher**: Styled with dark glass theme (`style_1.rasi`) mapped to `Super + Space`.
+- **Aether Kernel MCP Daemon (`aether-mcpd`)**: Exposes system threads, memory, cgroups, and PSI pressure metrics to local SLM/AI agents over Unix socket (`/run/aether/mcp.sock`) and HTTP (`:9090`).
+- **AI Copilot CLI (`aetherctl`)**: Conversational CLI utility for inspecting system health, compacting memory, and communicating with the kernel AI NeuroBus.
+- **Virtual Machine Manager Ready**: Tested and running smoothly under KVM / QEMU via `virt-manager` / `libvirt`.
+- **Bare-Metal Bootable**: Write the disk image directly to a USB drive via `dd` to boot on physical x86_64 PC hardware with Limine bootloader.
 
 ---
 
 ## ⌨️ Hyprland Keybindings
 
-- `Super` + `Enter`: Open terminal (`foot`)
-- `Super` + `Space`: Spotlight app launcher (`wofi`)
-- `Super` + `A`: Open **Aether AI Copilot** diagnostic window
-- `Super` + `C`: Run kernel memory compaction (`aetherctl compact`)
-- `Super` + `T`: Inspect active threads (`aetherctl threads`)
-- `Super` + `Q`: Close active window
-- `Super` + `V`: Toggle window floating mode
-- `Super` + `F`: Toggle fullscreen
-- `Super` + `1` .. `5`: Switch workspaces
+| Keybinding | Action |
+| :--- | :--- |
+| **`Super` + `Enter`** / **`Super` + `T`** | Open Terminal (`kitty` / `foot`) |
+| **`Super` + `Space`** / **`Super` + `D`** | Hyprdots Rofi Application Launcher |
+| **`Super` + `A`** | Launch Interactive Aether AI Copilot (`aetherctl`) |
+| **`Super` + `C`** | Run Kernel Memory Compaction |
+| **`Super` + `Q`** | Close Active Window (`killactive`) |
+| **`Super` + `V`** / **`Super` + `W`** | Toggle Window Floating Mode |
+| **`Super` + `F`** | Toggle Fullscreen |
+| **`Super` + `1` – `9`** | Switch Workspaces |
+| **`Super` + `Shift` + `1` – `9`** | Move Window to Workspace |
+| **`Super` + Mouse Drag** | Move / Resize Windows |
+| **`Super` + `Delete`** / **`Super` + `M`** | Exit Hyprland Session |
 
 ---
 
@@ -39,12 +49,16 @@ virt-manager
 ```
 Double-click `AetherOS-Mini` in the list to open the display console.
 
-Or launch the dedicated viewer window directly:
+Or connect directly via `virt-viewer`:
 ```bash
-virt-viewer --connect qemu:///system AetherOS-Mini
+virt-viewer -c qemu:///system AetherOS-Mini
 ```
 
-### 2. Boot on Physical PC Hardware via USB
+### 2. Kernel MCP Subsystem
+Inside the running OS, run:
 ```bash
-sudo dd if=aetheros-mini.img of=/dev/sdX bs=4M status=progress conv=fsync
+aetherctl status
+aetherctl diagnose
+aetherctl compact
+aetherctl threads
 ```
