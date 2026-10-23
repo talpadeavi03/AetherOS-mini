@@ -53,5 +53,14 @@ run: $(ISO)
 run-headless: $(ISO)
 	qemu-system-x86_64 -cdrom $(ISO) -m 512M -serial stdio -display none
 
+arch-image:
+	./scripts/build_arch_image.sh
+
+run-arch: aetheros-mini.img
+	qemu-system-x86_64 -drive file=aetheros-mini.img,format=raw -m 1G -smp 2 -serial stdio
+
+run-arch-headless: aetheros-mini.img
+	qemu-system-x86_64 -drive file=aetheros-mini.img,format=raw -m 1G -smp 2 -serial stdio -display none
+
 clean:
 	rm -rf build iso_root $(ISO)

@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""
+AetherOS CLI Control Utility (`aetherctl`)
+Communicates with the Aether Kernel MCP Daemon (aether-mcpd).
+"""
+
+import sys
+import os
+import json
+import socket
+import urllib.request
+import urllib.error
+
+MCP_SOCKET_PATH = "/run/aether/mcp.sock"
+HTTP_URL = "http://127.0.0.1:9090"
+
+def send_unix_request(req):
+    if not os.path.exists(MCP_SOCKET_PATH):
+        return None
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(MCP_SOCKET_PATH)
+        s.sendall(json.dumps(req).encode("utf-8"))
+        data = s.recv(32768).decode("utf-8")
+        s.close()
+        return json.loads(data)
+    except Exception:
+        return None
+
+def send_http_request(endpoint, payload=None):
+    url = f"{HTTP_URL}{endpoint}"
+    try:
+        if payload is not None:
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        else:
+            req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None
+
+def print_banner():
+    banner = """
+   ___     _   _               ___  ____  
+  / _ \\___| |_| |__   ___ _ __/ _ \\/ ___| 
+ | |_| / _ \\ __| '_ \\ / _ \\ '__| | | \\___ \\ 
+ |  _  | __/ |_| | | |  __/ |  | |_| |___) |
+ |_| |_|\\___|\\__|_| |_|\\___|_|   \\___/|____/ 
+ AetherOS Mini (Arch Base) - Kernel MCP & SLM
+    """
+    print(banner)
+
+def cmd_status():
+    print_banner()
+    res = send_unix_request({"action": "call_tool", "name": "system.diagnose", "args": {}})
+    if not res:
+        res = send_http_request("/status")
+        if not res:
+            print("[aetherctl] ERROR: Unable to connect to aether-mcpd daemon.")
+            print("Ensure the service is running: systemctl status aether-mcp")
+            return
+        print(f"Daemon Status: {res.get('status')} (v{res.get('version')})")
+        return
+
+    diag = res.get("result", {})
+    print(f"[*] System Status: {diag.get('status')}")
+    print(f"[*] Memory: {diag.get('ram_used_mb')}MB / {diag.get('ram_total_mb')}MB used (Available: {diag.get('ram_available_mb')}MB)")
+    print(f"[*] Active Threads: {diag.get('active_threads')} (Zombies: {diag.get('zombie_threads')})")
+    print(f"[*] PSI Pressure: {diag.get('psi')}")
+    print(f"[*] AI Recommendation: {diag.get('recommendation')}")
+
+def cmd_diagnose():
+    res = send_unix_request({"action": "call_tool", "name": "system.diagnose", "args": {}})
+    if not res:
+        res = send_http_request("/tool/system.diagnose", {})
+        if res:
+            res = {"result": res.get("result")}
+    if res:
+        print(json.dumps(res.get("result"), indent=2))
+    else:
+        print("[aetherctl] Daemon unavailable.")
+
+def cmd_compact():
+    res = send_unix_request({"action": "call_tool", "name": "memory.compact", "args": {}})
+    if not res:
+        res = send_http_request("/tool/memory.compact", {})
+        if res:
+            res = {"result": res.get("result")}
+    if res:
+        print(json.dumps(res.get("result"), indent=2))
+    else:
+        print("[aetherctl] Daemon unavailable.")
+
+def cmd_threads():
+    res = send_unix_request({"action": "get_resource", "uri": "res://system/threads"})
+    if not res:
+        res = send_http_request("/resource/system/threads")
+    if res:
+        threads = res.get("data", [])
+        print(f"{'PID':<8} {'TID':<8} {'STATE':<6} {'NICE':<6} {'PRIO':<6} {'COMMAND'}")
+        print("-" * 60)
+        for t in threads[:25]:
+            print(f"{t['pid']:<8} {t['tid']:<8} {t['state']:<6} {t['nice']:<6} {t['priority']:<6} {t['comm']}")
+        if len(threads) > 25:
+            print(f"... and {len(threads) - 25} more threads.")
+    else:
+        print("[aetherctl] Daemon unavailable.")
+
+def cmd_chat(prompt):
+    res = send_unix_request({"action": "chat", "prompt": prompt})
+    if not res:
+        res = send_http_request("/chat", {"prompt": prompt})
+    if res:
+        print("\n[Aether SLM Copilot]:")
+        print(res.get("response", "No response received."))
+    else:
+        print("[aetherctl] Daemon unavailable.")
+
+def cmd_mcp(subargs):
+    if not subargs or subargs[0] == "list":
+        res = send_unix_request({"action": "list_tools"})
+        if not res:
+            res = send_http_request("/tools")
+            if res:
+                res = {"tools": res}
+        if res:
+            print("[AetherOS Registered MCP Tools]:")
+            for t in res.get("tools", []):
+                print(f"  • {t['name']}: {t['description']}")
+        else:
+            print("[aetherctl] Daemon unavailable.")
+    elif subargs[0] == "call":
+        if len(subargs) < 2:
+            print("Usage: aetherctl mcp call <tool_name> [args_json]")
+            return
+        t_name = subargs[1]
+        t_args = json.loads(subargs[2]) if len(subargs) > 2 else {}
+        res = send_unix_request({"action": "call_tool", "name": t_name, "args": t_args})
+        if not res:
+            res = send_http_request(f"/tool/{t_name}", t_args)
+            if res:
+                res = {"result": res.get("result")}
+        print(json.dumps(res, indent=2))
+
+def main():
+    if len(sys.argv) < 2:
+        cmd_status()
+        print("\nCommands:")
+        print("  aetherctl status            Show system and MCP status")
+        print("  aetherctl diagnose          Run holistic AI system health check")
+        print("  aetherctl threads           List top threads across all processes")
+        print("  aetherctl compact           Trigger kernel memory compaction")
+        print("  aetherctl chat <prompt>     Ask the onboard SLM Copilot a question")
+        print("  aetherctl mcp list          List all registered MCP tools")
+        print("  aetherctl mcp call <name>   Execute an MCP tool")
+        return
+
+    cmd = sys.argv[1]
+    if cmd == "status":
+        cmd_status()
+    elif cmd == "diagnose":
+        cmd_diagnose()
+    elif cmd == "compact":
+        cmd_compact()
+    elif cmd == "threads":
+        cmd_threads()
+    elif cmd == "chat":
+        prompt = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "help"
+        cmd_chat(prompt)
+    elif cmd == "mcp":
+        cmd_mcp(sys.argv[2:])
+    else:
+        print(f"Unknown command: {cmd}. Run 'aetherctl' for help.")
+
+if __name__ == "__main__":
+    main()
