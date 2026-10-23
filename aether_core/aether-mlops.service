@@ -1,0 +1,15 @@
+[Unit]
+Description=AetherOS Native MLOps & Model Runtime Engine
+After=aether-mcp.service
+Wants=aether-mcp.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/aether-mlopsd
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

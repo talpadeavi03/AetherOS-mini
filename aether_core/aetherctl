@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 AetherOS CLI Control Utility (`aetherctl`)
-Unified control interface for Kernel MCP, Sensory Core, Multi-Agent Swarm, and Intent Engine.
+Unified control interface for Kernel MCP, Sensory Core, Multi-Agent Swarm,
+Native MLOps Engine, and Terminal AI Developer Copilot.
 """
 
 import sys
@@ -16,6 +17,7 @@ VOICE_SOCK = "/run/aether/voice.sock"
 MEM_SOCK = "/run/aether/mem.sock"
 INTENT_SOCK = "/run/aether/intent.sock"
 AGENT_SOCK = "/run/aether/agent.sock"
+MLOPS_SOCK = "/run/aether/mlops.sock"
 
 def send_unix_request(sock_path, req, timeout=2.0):
     if not os.path.exists(sock_path):
@@ -38,7 +40,7 @@ def print_banner():
  | |_| / _ \\ __| '_ \\ / _ \\ '__| | | \\___ \\ 
  |  _  | __/ |_| | | |  __/ |  | |_| |___) |
  |_| |_|\\___|\\__|_| |_|\\___|_|   \\___/|____/ 
- AetherOS - AI-Native Multi-Agent Sensory Operating System
+ AetherOS - AI-Native Multi-Agent Sensory & MLOps Operating System
     """
     print(banner)
 
@@ -50,6 +52,7 @@ def cmd_status():
     mem_res = send_unix_request(MEM_SOCK, {"action": "stats"})
     int_res = send_unix_request(INTENT_SOCK, {"action": "status"})
     agn_res = send_unix_request(AGENT_SOCK, {"action": "status"})
+    mlp_res = send_unix_request(MLOPS_SOCK, {"action": "status"})
 
     print("════════════════════════════════════════════════════════════════")
     print(" [1] KERNEL MCP NEUROBUS (aether-mcpd)")
@@ -119,6 +122,18 @@ def cmd_status():
         print(f"     Health Agent:     {s_hlth}")
     else:
         print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [7] OS-NATIVE MLOPS & MODEL RUNTIME (aether-mlopsd)")
+    if mlp_res:
+        hw = mlp_res.get("hardware", {})
+        bench = mlp_res.get("last_benchmark", {})
+        active = mlp_res.get("active_models", {})
+        print(f"     Compute Engine:   {hw.get('cpu_model', 'x86_64')} ({hw.get('vector_compute_rating', 'AVX2')})")
+        print(f"     SIMD Throughput:  {bench.get('simd_throughput_mflops', 128.4)} MFLOPS (Benchmark: {bench.get('duration_ms', 1.2)}ms)")
+        print(f"     Active Models:    Intent: {active.get('intent')} | Vision: {active.get('vision')}")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
     print("════════════════════════════════════════════════════════════════\n")
 
 def cmd_vision():
@@ -186,6 +201,41 @@ def cmd_agent(subargs):
         if res and "agents" in res:
             print(json.dumps(res["agents"].get("health", {}), indent=2))
 
+def cmd_mlops(subargs):
+    if not subargs or subargs[0] == "status":
+        res = send_unix_request(MLOPS_SOCK, {"action": "status"})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-mlopsd offline.")
+    elif subargs[0] == "models":
+        res = send_unix_request(MLOPS_SOCK, {"action": "models"})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-mlopsd offline.")
+    elif subargs[0] == "benchmark":
+        res = send_unix_request(MLOPS_SOCK, {"action": "benchmark"})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-mlopsd offline.")
+    elif subargs[0] == "switch":
+        tier = subargs[1] if len(subargs) > 1 else "intent"
+        model_id = subargs[2] if len(subargs) > 2 else ""
+        res = send_unix_request(MLOPS_SOCK, {"action": "switch", "tier": tier, "model_id": model_id})
+        print(json.dumps(res, indent=2) if res else "[aetherctl] aether-mlopsd offline.")
+
+def cmd_assist(subargs):
+    query = " ".join(subargs) if subargs else "list open ports"
+    script = "/usr/bin/aether-assist"
+    if not os.path.exists(script):
+        script = os.path.join(os.path.dirname(__file__), "aether_terminal_ai.py")
+    subprocess.run([sys.executable, script, query])
+
+def cmd_fix():
+    script = "/usr/bin/aether-assist"
+    if not os.path.exists(script):
+        script = os.path.join(os.path.dirname(__file__), "aether_terminal_ai.py")
+    subprocess.run([sys.executable, script, "fix"])
+
+def cmd_git():
+    script = "/usr/bin/aether-assist"
+    if not os.path.exists(script):
+        script = os.path.join(os.path.dirname(__file__), "aether_terminal_ai.py")
+    subprocess.run([sys.executable, script, "git"])
+
 def cmd_intent(subargs):
     prompt = " ".join(subargs) if subargs else "diagnose system"
     res = send_unix_request(INTENT_SOCK, {"action": "route", "prompt": prompt})
@@ -221,17 +271,19 @@ def main():
         print("Commands:")
         print("  aetherctl status            Show unified sensory & MCP system health")
         print("  aetherctl agent [cmd]       Inspect or command Autonomous Agent Swarm (heal/status/devops)")
+        print("  aetherctl mlops [cmd]       Inspect MLOps model registry & hardware benchmarks")
+        print("  aetherctl assist \"<query>\"  Terminal AI copilot for natural language commands")
+        print("  aetherctl fix               Analyze last shell failure and generate resolution")
+        print("  aetherctl git               Auto-generate conventional git commit message")
         print("  aetherctl hud               Launch Spatial Neural HUD")
         print("  aetherctl vision            Inspect real-time gaze, fatigue & biometrics")
         print("  aetherctl voice speak <t>   Synthesize speech via neural/phonetic TTS")
-        print("  aetherctl voice mode <m>    Set voice mode (interactive/meeting_mode)")
         print("  aetherctl memory store <c>  Store episodic note in vector vault")
         print("  aetherctl memory search <q> Query memory using cosine vector search")
         print("  aetherctl memory graph      Inspect user & system knowledge graph")
         print("  aetherctl intent <prompt>   Route natural language intent (<15ms)")
         print("  aetherctl chat <prompt>     Ask the onboard SLM Copilot (with TTS)")
         print("  aetherctl compact           Trigger kernel memory compaction")
-        print("  aetherctl threads           List top active threads")
         return
 
     cmd = sys.argv[1]
@@ -239,6 +291,14 @@ def main():
         cmd_status()
     elif cmd == "agent":
         cmd_agent(sys.argv[2:])
+    elif cmd == "mlops":
+        cmd_mlops(sys.argv[2:])
+    elif cmd == "assist":
+        cmd_assist(sys.argv[2:])
+    elif cmd == "fix":
+        cmd_fix()
+    elif cmd == "git":
+        cmd_git()
     elif cmd == "hud":
         cmd_hud()
     elif cmd == "vision":
@@ -255,11 +315,7 @@ def main():
     elif cmd == "compact":
         res = send_unix_request(MCP_SOCK, {"action": "call_tool", "name": "memory.compact", "args": {}})
         print(res.get("result") if res else "Compacting memory...")
-    elif cmd == "threads":
-        res = send_unix_request(MCP_SOCK, {"action": "call_tool", "name": "threads.tune", "args": {}})
-        print(json.dumps(res.get("result"), indent=2) if res else "Enumerating threads...")
     else:
-        # Default to intent routing
         cmd_intent(sys.argv[1:])
 
 if __name__ == "__main__":
