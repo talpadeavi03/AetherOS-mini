@@ -303,6 +303,24 @@ def cmd_hud():
         hud_bin = os.path.join(os.path.dirname(__file__), "aether_hud.py")
     subprocess.run([hud_bin])
 
+def cmd_holo(args):
+    holo_bin = "/usr/bin/aether-holo"
+    if not os.path.exists(holo_bin):
+        holo_bin = os.path.join(os.path.dirname(__file__), "aether_holo.py")
+    subprocess.run([sys.executable, holo_bin] + args)
+
+def cmd_jarvis(args):
+    prompt = " ".join(args) if args else "Jarvis status report"
+    print(f"\033[38;2;255;215;0m\033[1m[Tony]\033[0m {prompt}")
+    res = send_unix_request(INTENT_SOCK, {"action": "route", "prompt": prompt})
+    if res and "result" in res:
+        reply = res["result"]
+        print(f"\033[38;2;0;255;255m\033[1m[J.A.R.V.I.S.]\033[0m {reply}")
+        send_unix_request(VOICE_SOCK, {"action": "speak", "text": str(reply)})
+    else:
+        print("\033[38;2;0;255;255m\033[1m[J.A.R.V.I.S.]\033[0m At your service, sir. Subsystems are operating nominally.")
+        send_unix_request(VOICE_SOCK, {"action": "speak", "text": "At your service, sir."})
+
 def cmd_test():
     test_script = "/usr/bin/aether-test"
     if not os.path.exists(test_script):
@@ -313,6 +331,8 @@ def main():
     if len(sys.argv) < 2:
         cmd_status()
         print("Commands:")
+        print("  aetherctl holo              Launch 3D Volumetric Hologram Engine (Arc Reactor / Radar / LiDAR)")
+        print("  aetherctl jarvis \"<query>\"  Direct full-duplex conversational voice query to J.A.R.V.I.S.")
         print("  aetherctl status            Show unified sensory, swarm & robotics health")
         print("  aetherctl robot [cmd]       Inspect or actuate Robotics & Sensor Fusion Hub")
         print("  aetherctl agent [cmd]       Inspect or command Autonomous Agent Swarm (heal/status/devops)")
@@ -334,6 +354,10 @@ def main():
     cmd = sys.argv[1]
     if cmd == "status":
         cmd_status()
+    elif cmd in ["holo", "hologram"]:
+        cmd_holo(sys.argv[2:])
+    elif cmd in ["jarvis", "stark"]:
+        cmd_jarvis(sys.argv[2:])
     elif cmd in ["robot", "robotics"]:
         cmd_robot(sys.argv[2:])
     elif cmd == "agent":

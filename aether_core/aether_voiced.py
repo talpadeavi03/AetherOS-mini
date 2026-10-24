@@ -31,10 +31,10 @@ class VoiceState:
         self.vad_energy_db = -42.0
         self.speech_detected = False
         self.last_speech_time = time.time()
-        self.current_speaker = "aether_primary"
-        self.voice_pitch = 50   # 0 - 99
-        self.voice_speed = 160  # wpm
-        self.voice_accent = "en-us"
+        self.current_speaker = "J.A.R.V.I.S."
+        self.voice_pitch = 44   # 0 - 99 (Paul Bettany British Baritone)
+        self.voice_speed = 148  # wpm (Measured, articulate cadence)
+        self.voice_accent = "en-gb"
         self.history = []
 
     def to_dict(self):

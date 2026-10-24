@@ -455,7 +455,40 @@ curl -s -X POST -H "Content-Type: application/json" \
 
 ---
 
-## Component 11: Compositor & Hyprdots UI Controls
+## Component 11: J.A.R.V.I.S. 3D Volumetric Hologram Engine (`aether-holo`)
+
+Real-time 3D perspective projection and sub-pixel Unicode Braille rendering engine incorporating the Avengers: Age of Ultron cinematic hologram from `ffMathy/hey-jarvis`.
+
+### Holographic Projection Modes:
+- **`[1]` AVENGERS J.A.R.V.I.S. GOLDEN SPHERE**: Rolling ladder truss ring ($1.035R$ outer, $0.935R$ inner, $9^\circ$ rungs), left bright crescent, counter-turning whorl arms, hooked core, agent satellites, and agitation speech churn.
+- **`[2]` MARK 85 ARC REACTOR CORE**: 3D concentric rotating torus rings, 10 magnetic solenoids, palladium core, and live 3.82 GW power telemetry.
+- **`[3]` GLOBAL PLANETARY SENSOR & DEFENSE GRID**: Rotating 3D wireframe spherical coordinates with orbital satellite tracks and ground station links.
+- **`[4]` SPATIAL 3D LIDAR & ROBOTICS POINT CLOUD**: Live terrain wireframe mesh from `aether-roboticsd` with 6-DoF attitude gimbal.
+- **`[5]` STARK INDUSTRIES WORKSHOP MATRIX**: Dual-viewport split holographic workbench with laser dividing wire.
+
+### How to Test:
+#### 1. Launch Hologram Engine from CLI:
+```bash
+aetherctl holo
+```
+
+#### 2. Headless Automated Validation:
+```bash
+aether-holo --test
+```
+*Validates 3D matrix math, projection pipelines, and frame generation across all 5 modes.*
+
+#### 3. Conversational Voice Query to J.A.R.V.I.S.:
+```bash
+aetherctl jarvis "Jarvis, what are the power levels?"
+aetherctl jarvis "Who are you?"
+aetherctl jarvis "Deploy shields and scan perimeter"
+```
+*Verify that J.A.R.V.I.S. responds with British Received Pronunciation audio speech and updates live subtitle banners.*
+
+---
+
+## Component 12: Compositor & Hyprdots UI Controls
 
 AetherOS runs on Hyprland 0.56 with a customized Catppuccin Mocha glassmorphic theme.
 
@@ -463,6 +496,8 @@ AetherOS runs on Hyprland 0.56 with a customized Catppuccin Mocha glassmorphic t
 
 | Keybinding | Action |
 | :--- | :--- |
+| **`Super` + `H`** | Launch **J.A.R.V.I.S. 3D Hologram Workshop Core** (`aether-holo`) |
+| **`Super` + `J`** | Direct **J.A.R.V.I.S. Conversational Voice Terminal** (`aetherctl jarvis`) |
 | **`Super` + `Space`** / **`Super` + `A`** | Toggle **Spatial Neural HUD** (`aether-hud`) |
 | **`Super` + `Enter`** / **`Super` + `T`** | Open Foot Terminal |
 | **`Super` + `S`** | Real-Time Sensory Vision Telemetry (`aetherctl vision`) |
@@ -476,8 +511,9 @@ AetherOS runs on Hyprland 0.56 with a customized Catppuccin Mocha glassmorphic t
 | **`Super` + `Shift` + `1` – `9`** | Move Active Window to Workspace |
 
 ### Waybar Interactive Status Pills (Top Panel)
+- **`󰹢 ARC 100%`** (Gold): Clicking opens the 3D Hologram Workshop Engine (`aether-holo`).
 - **`󰈈 Vision Active`** (Cyan): Clicking launches sensory vision telemetry window.
-- **`󰚩 Neural HUD`** (Violet): Clicking opens the Spatial Neural HUD.
+- **`󰚩 AI Copilot`** (Violet): Clicking opens the AI Copilot and Neural HUD.
 - **`󰍛 0.8GB`** (Memory): Clicking triggers kernel memory compaction.
 
 ---

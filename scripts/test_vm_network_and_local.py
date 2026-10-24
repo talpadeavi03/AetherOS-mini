@@ -154,7 +154,7 @@ def main():
     matrix.append(("Native MLOps Engine (:9096)", ok, f"{mflops:.1f} MFLOPS on {hw.get('vector_compute_rating')}"))
 
     # 8. Robotics
-    print(f"\n{BOLD}[8/8] Testing Robotics & Sensor Fusion Hub (:9097)...{RESET}")
+    print(f"\n{BOLD}[8/9] Testing Robotics & Sensor Fusion Hub (:9097)...{RESET}")
     rob, lat = http_get(9097, "/status")
     nav, nav_lat = http_post(9097, "/navigate", {"x": 2.5, "y": 1.2, "theta": 45.0})
     lidar, _ = http_get(9097, "/lidar")
@@ -166,6 +166,14 @@ def main():
     print(f"  • Navigation:       {nav.get('status')} (Target: {nav.get('target')}) in {nav_lat:.2f}ms")
     print(f"  • LiDAR / IMU:      Min Range: {lidar.get('min_distance_m')}m | Roll: {imu.get('roll_deg')}°, Pitch: {imu.get('pitch_deg')}°")
     matrix.append(("Robotics Sensor Fusion (:9097)", ok, f"Mode: {mode}, Nav: ENGAGED in {nav_lat:.2f}ms"))
+
+    # 9. J.A.R.V.I.S. Conversational Intelligence & 3D Hologram
+    print(f"\n{BOLD}[9/9] Testing J.A.R.V.I.S. Intelligence & Arc Reactor Telemetry...{RESET}")
+    jarvis_res, j_lat = http_post(9094, "/route", {"prompt": "Jarvis, what are the power levels?"})
+    j_ok = "stark.reactor_telemetry" in jarvis_res.get("intent", "") and "3.82 gigawatts" in jarvis_res.get("result", "")
+    print(f"  • Resolved Persona: '{jarvis_res.get('intent')}' in {j_lat:.2f}ms")
+    print(f"  • J.A.R.V.I.S. Spoke: \"{jarvis_res.get('result', '')}\"")
+    matrix.append(("J.A.R.V.I.S. Conversational Core", j_ok, f"Arc Reactor: 3.82 GW, {j_lat:.2f}ms"))
 
     # Summary
     print(f"\n{BOLD}{CYAN}══════════════════════════════════════════════════════════════════════════════════{RESET}")

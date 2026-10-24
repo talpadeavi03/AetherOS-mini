@@ -1,23 +1,41 @@
 # AetherOS: AI-Native Operating System (Arch Linux + Hyprland + Hyprdots)
+## 100% On-Screen J.A.R.V.I.S. Hologram Workshop Core & AI NeuroBus
 
-**AetherOS** is an AI-Native 64-bit operating system combining a modern **Arch Linux** base with the **Hyprland** Wayland compositor styled after [Hyprdots](https://github.com/prasanthrangan/hyprdots.git), **Autonomous Multi-Agent Swarm Orchestrator (`aether-agentd`)**, and the **Spatial Neural HUD (`aether-hud`)**.
+**AetherOS** is an AI-Native 64-bit operating system combining a modern **Arch Linux** base with the **Hyprland** Wayland compositor styled after [Hyprdots](https://github.com/prasanthrangan/hyprdots.git), **3D Volumetric Hologram Engine (`aether-holo`)**, **Full-Duplex J.A.R.V.I.S. Conversational Core (`aether-voiced` / `aether-intentd`)**, **Autonomous Multi-Agent Swarm Orchestrator (`aether-agentd`)**, and **Robotics Sensor Fusion Hub (`aether-roboticsd`)**.
 
 ---
 
-## 📸 Desktop & Spatial Neural HUD Preview
+## 📸 On-Screen J.A.R.V.I.S. 3D Hologram Previews
 
-![AetherOS Phase 3 Spatial Neural HUD](phase3_hud.png)
+![J.A.R.V.I.S. 3D Holographic Arc Reactor](jarvis_arc_reactor_live.png)
 
-*Figure 1: Spatial Neural HUD floating in Hyprland with pulsating animated Quantum Core Iris, real-time audio visualizer waves, 4-agent decision matrix, and sub-15ms micro-intent command engine.*
+*Figure 1: Mark 85 3D Volumetric Holographic Arc Reactor floating in Hyprland with rotating concentric magnetic solenoids, vibrating core, live 3.82 GW energy telemetry, and real-time J.A.R.V.I.S. conversational subtitles (`Super + H`).*
 
-![AetherOS Phase 3 Autonomous Intent Execution](phase3_intent.png)
+![J.A.R.V.I.S. Global Planetary Sensor Grid](jarvis_planetary_radar_live.png)
 
-*Figure 2: Micro-intent natural language execution ('prepare devops') dispatched autonomously in 15.1ms across the Kernel NeuroBus.*
+*Figure 2: 3D Global Planetary Sensor Grid displaying rotating spherical wireframe coordinates, orbital tracking for the 4 resident swarm agents (Sentinel, Security, DevOps, Health), and ground link pings.*
+
+![J.A.R.V.I.S. Spatial 3D LiDAR Mesh](jarvis_lidar_mesh_live.png)
+
+*Figure 3: Spatial 3D LiDAR point cloud floor mesh rendered from live sensor fusion (`aether-roboticsd`) with IMU attitude artificial horizon (Roll, Pitch, Yaw) and obstacle clearance vectors.*
+
+![J.A.R.V.I.S. Stark Industries Workshop Matrix](jarvis_workshop_matrix_live.png)
+
+*Figure 4: Dual-viewport holographic workbench displaying concurrent Arc Reactor core telemetry and planetary defense tracking separated by laser wire partition.*
 
 ---
 
 ## 🌟 Architecture & Highlights
 
+- **3D Volumetric Hologram Engine (`aether-holo`)**:
+  - Sub-pixel Unicode Braille Canvas ($2 \times 4$ pixels per character cell, $160 \times 160$+ sub-pixel resolution).
+  - Real-time 3D rotation matrices ($R_x, R_y, R_z$) and perspective 3D-to-2D depth projection with TrueColor 24-bit ANSI depth shading.
+  - Four projection modes: `[1]` Mark 85 Arc Reactor, `[2]` Global Defense Grid, `[3]` 3D Spatial LiDAR Mesh, `[4]` Dual-Viewport Workshop Matrix.
+  - Full-screen glassmorphic floating window in Hyprland (`Super + H`).
+- **Conversational J.A.R.V.I.S. Voice & Persona Core**:
+  - Paul Bettany British Received Pronunciation voice synthesis (`en-gb`, pitch 44, speed 148 wpm via `espeak-ng`).
+  - Deterministic sub-15ms intent classification for Tony Stark workshop commands ("power levels", "deploy swarm", "scan perimeter", "status report").
+  - Live on-screen holographic subtitle banner synchronized with audio speech output.
 - **Robotics & Sensor Fusion Hub (`aether-roboticsd`) (Phase 5)**:
   - Real-time 6-DoF IMU attitude calculation, 360-degree LiDAR sector mapping, and obstacle collision perimeter defense.
   - ROS 2-compatible MCP tool primitives (`robot.navigate`, `sensor.lidar_scan`, `sensor.imu_attitude`, `robot.teleop`).
@@ -49,11 +67,11 @@
 - **Hyprdots Aesthetic**:
   - Catppuccin Mocha palette, 10px rounded corners, dual-pass frosted glass blur, 45-degree border gradients (`rgba(ca9ee6ff) rgba(f2d5cfff)`), and smooth bezier animations.
 - **Floating Capsule Waybar**:
-  - Modular pill-style bar with workspace switcher, date/time, live CPU/RAM metrics, active **`󰈈 Vision Active`** sensory pill, and **`󰚩 Neural HUD`** status pill.
+  - Modular pill-style bar with workspace switcher, date/time, live CPU/RAM metrics, active **`󰹢 ARC 100%`** Arc Reactor module, **`󰈈 Vision Active`** sensory pill, and **`󰚩 AI Copilot`** status pill.
 - **Kernel MCP NeuroBus (`aether-mcpd`)**:
   - Exposes system threads, memory, cgroups, and PSI pressure metrics to local SLM/AI agents over Unix socket (`/run/aether/mcp.sock`) and HTTP (`:9090`).
 - **Unified Control CLI (`aetherctl`)**:
-  - Command interface for system health, agent swarm orchestration, vector memory querying, and intent execution.
+  - Command interface for system health, agent swarm orchestration, 3D hologram projection (`aetherctl holo`), J.A.R.V.I.S. conversational voice query (`aetherctl jarvis "<query>"`), and automated verification.
 
 ---
 
@@ -61,6 +79,8 @@
 
 | Keybinding | Action |
 | :--- | :--- |
+| **`Super` + `H`** | Launch **J.A.R.V.I.S. 3D Hologram Workshop Core** (`aether-holo`) |
+| **`Super` + `J`** | Open **J.A.R.V.I.S. Conversational Voice Terminal** (`aetherctl jarvis`) |
 | **`Super` + `Space`** / **`Super` + `A`** | Launch **AetherOS Spatial Neural HUD** (`aether-hud`) |
 | **`Super` + `Enter`** / **`Super` + `T`** | Open Foot Terminal |
 | **`Super` + `S`** | Inspect Real-Time Sensory & Biometric Telemetry (`aetherctl vision`) |

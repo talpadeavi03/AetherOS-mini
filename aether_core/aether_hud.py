@@ -215,7 +215,7 @@ class NeuralHUD:
             print(f"    {TEXT}{r}{RESET}")
             print(f"{SURFACE}─" * 114 + f"{RESET}")
 
-        print(f"  {BOLD}{VIOLET}AI Command Prompt:{RESET} {DIM}Type natural language intent (or 'heal', 'status', 'q' to exit):{RESET}")
+        print(f"  {BOLD}{VIOLET}AI Command Prompt:{RESET} {DIM}Type natural language intent (or 'holo' for 3D Arc Reactor, 'heal', 'status', 'q'):{RESET}")
         sys.stdout.write(f"  {CYAN}AetherOS ❯ {RESET}")
         sys.stdout.flush()
 
@@ -225,6 +225,12 @@ class NeuralHUD:
             return
         if cmd in ["q", "quit", "exit"]:
             self.running = False
+            return
+        if cmd in ["holo", "hologram", "h", "H", "arc"]:
+            holo_bin = "/usr/bin/aether-holo"
+            if not os.path.exists(holo_bin):
+                holo_bin = os.path.join(os.path.dirname(__file__), "aether_holo.py")
+            subprocess.run([sys.executable, holo_bin])
             return
         if cmd in ["heal", "self-heal"]:
             res = query_sock(AGENT_SOCK, {"action": "dispatch", "agent": "sentinel", "agent_action": "heal"})

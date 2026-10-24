@@ -9,3 +9,9 @@ arch_base/
 # Temporary screenshots
 crop_error.png
 arch_screen.png
+holo_live.png
+holo_mode*.png
+holo_window.png
+vm_screen_current.png
+__pycache__/
+*.pyc

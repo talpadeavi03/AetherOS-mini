@@ -27,6 +27,7 @@
     "modules-right": [
         "custom/padd",
         "custom/l_end",
+        "custom/reactor",
         "custom/sensory",
         "custom/ai",
         "cpu",
@@ -35,6 +36,12 @@
         "custom/r_end",
         "custom/padd"
     ],
+
+    "custom/reactor": {
+        "format": "󰹢  ARC 100%",
+        "tooltip": "J.A.R.V.I.S. Arc Reactor Hologram (Super + H)",
+        "on-click": "foot -T 'AetherOS Hologram Engine' -e /usr/bin/aether-holo"
+    },
 
     "custom/sensory": {
         "format": "󰈈  Vision Active",
