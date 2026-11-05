@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+"""
+AetherOS CLI Control Utility (`aetherctl`)
+Unified control interface for Kernel MCP, Vision, Voice, Memory, and Intent Engines.
+"""
+
+import sys
+import os
+import json
+import socket
+import urllib.request
+import urllib.error
+
+MCP_SOCK = "/run/aether/mcp.sock"
+VISION_SOCK = "/run/aether/vision.sock"
+VOICE_SOCK = "/run/aether/voice.sock"
+MEM_SOCK = "/run/aether/mem.sock"
+INTENT_SOCK = "/run/aether/intent.sock"
+
+def send_unix_request(sock_path, req, timeout=2.0):
+    if not os.path.exists(sock_path):
+        return None
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        s.connect(sock_path)
+        s.sendall(json.dumps(req).encode("utf-8"))
+        data = s.recv(32768).decode("utf-8")
+        s.close()
+        return json.loads(data)
+    except Exception:
+        return None
+
+def print_banner():
+    banner = """
+   ___     _   _               ___  ____  
+  / _ \\___| |_| |__   ___ _ __/ _ \\/ ___| 
+ | |_| / _ \\ __| '_ \\ / _ \\ '__| | | \\___ \\ 
+ |  _  | __/ |_| | | |  __/ |  | |_| |___) |
+ |_| |_|\\___|\\__|_| |_|\\___|_|   \\___/|____/ 
+ AetherOS - AI-Native Sensory & Intelligence Core
+    """
+    print(banner)
+
+def cmd_status():
+    print_banner()
+    mcp_res = send_unix_request(MCP_SOCK, {"action": "call_tool", "name": "system.diagnose", "args": {}})
+    vis_res = send_unix_request(VISION_SOCK, {"action": "status"})
+    voc_res = send_unix_request(VOICE_SOCK, {"action": "status"})
+    mem_res = send_unix_request(MEM_SOCK, {"action": "stats"})
+    int_res = send_unix_request(INTENT_SOCK, {"action": "status"})
+
+    print("════════════════════════════════════════════════════════════════")
+    print(" [1] KERNEL MCP NEUROBUS (aether-mcpd)")
+    if mcp_res and "result" in mcp_res:
+        r = mcp_res["result"]
+        status_val = r.get('status') or r.get('system_status', 'OPTIMAL')
+        used = r.get('ram_used_mb') or r.get('memory', {}).get('used_mb', 0)
+        total = r.get('ram_total_mb') or r.get('memory', {}).get('total_mb', 0)
+        threads = r.get('active_threads') or r.get('threads', {}).get('total_threads', 0)
+        print(f"     Status:           {status_val}")
+        print(f"     Memory Usage:     {used}MB / {total}MB")
+        print(f"     Active Threads:   {threads}")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [2] VISION ENGINE (aether-visiond)")
+    if vis_res:
+        bio = vis_res.get("biometrics", {})
+        ergo = vis_res.get("ergonomics", {})
+        print(f"     Authenticated:    {bio.get('authenticated_user')} (Confidence: {bio.get('confidence')*100:.1f}%)")
+        print(f"     Gaze Focus:       {vis_res.get('gaze', {}).get('focus_region')} (Vector: {vis_res.get('gaze', {}).get('vector')})")
+        print(f"     Blink Rate:       {ergo.get('blink_rate_bpm')} bpm (EAR: {ergo.get('ear')})")
+        print(f"     Posture State:    {ergo.get('posture')} (Pitch: {ergo.get('head_pose', {}).get('pitch')}°)")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [3] VOICE INTELLIGENCE (aether-voiced)")
+    if voc_res:
+        print(f"     Listening Mode:   {voc_res.get('mode')}")
+        print(f"     Speech Detected:  {voc_res.get('vad', {}).get('speech_detected')}")
+        print(f"     Synthesizer:      {voc_res.get('synthesizer', {}).get('backend')} ({voc_res.get('synthesizer', {}).get('accent')})")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [4] VECTOR MEMORY & KNOWLEDGE (aether-memd)")
+    if mem_res:
+        print(f"     Episodic Records: {mem_res.get('episodic_records')}")
+        print(f"     Knowledge Edges:  {mem_res.get('knowledge_graph_edges')}")
+        print(f"     Vault Database:   {mem_res.get('db_path')}")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
+
+    print("────────────────────────────────────────────────────────────────")
+    print(" [5] INTENT ROUTER (aether-intentd)")
+    if int_res:
+        print(f"     Total Intents:    {int_res.get('total_routed')}")
+        last = int_res.get("last_intent")
+        if last:
+            print(f"     Last Dispatched:  '{last.get('intent')}' ({last.get('duration_ms')}ms)")
+    else:
+        print("     Status:           OFFLINE or INITIALIZING")
+    print("════════════════════════════════════════════════════════════════\n")
+
+def cmd_vision():
+    res = send_unix_request(VISION_SOCK, {"action": "status"})
+    if not res:
+        print("[aetherctl] Error: aether-visiond is not responding.")
+        return
+    print(json.dumps(res, indent=2))
+
+def cmd_voice(subargs):
+    if not subargs or subargs[0] == "status":
+        res = send_unix_request(VOICE_SOCK, {"action": "status"})
+        print(json.dumps(res, indent=2))
+    elif subargs[0] == "speak":
+        text = " ".join(subargs[1:]) if len(subargs) > 1 else "AetherOS sensory core online."
+        res = send_unix_request(VOICE_SOCK, {"action": "speak", "text": text})
+        print(f"[*] Voice output: {text}")
+        if res:
+            print(f"[*] Status: {res.get('status')}")
+    elif subargs[0] == "mode":
+        mode = subargs[1] if len(subargs) > 1 else "interactive"
+        res = send_unix_request(VOICE_SOCK, {"action": "set_mode", "mode": mode})
+        print(f"[*] Mode updated: {res}")
+
+def cmd_memory(subargs):
+    if not subargs or subargs[0] == "stats":
+        res = send_unix_request(MEM_SOCK, {"action": "stats"})
+        print(json.dumps(res, indent=2))
+    elif subargs[0] == "store":
+        if len(subargs) < 3:
+            print("Usage: aetherctl memory store <category> <content...>")
+            return
+        cat = subargs[1]
+        content = " ".join(subargs[2:])
+        res = send_unix_request(MEM_SOCK, {"action": "store", "category": cat, "key": "cli", "content": content})
+        print(f"[*] Memory stored: {res}")
+    elif subargs[0] == "search":
+        query = " ".join(subargs[1:]) if len(subargs) > 1 else ""
+        res = send_unix_request(MEM_SOCK, {"action": "search", "query": query, "limit": 5})
+        print(json.dumps(res, indent=2))
+    elif subargs[0] == "graph":
+        res = send_unix_request(MEM_SOCK, {"action": "graph"})
+        print(json.dumps(res, indent=2))
+
+def cmd_intent(subargs):
+    prompt = " ".join(subargs) if subargs else "diagnose system"
+    res = send_unix_request(INTENT_SOCK, {"action": "route", "prompt": prompt})
+    if not res:
+        print("[aetherctl] Error: aether-intentd is not responding.")
+        return
+    print(f"[*] Prompt:       '{res.get('prompt')}'")
+    print(f"[*] Resolved:     {res.get('intent')} (Tier: {res.get('tier')})")
+    print(f"[*] Action:       {res.get('action')}")
+    print(f"[*] Latency:      {res.get('latency_ms')}ms")
+    print(f"[*] Result:       {res.get('result')}")
+
+def cmd_chat(prompt):
+    res = send_unix_request(INTENT_SOCK, {"action": "route", "prompt": prompt})
+    if res:
+        print(f"\n[Aether Intent]: {res.get('intent')} (Tier: {res.get('tier')}, {res.get('latency_ms')}ms)")
+        print(f"[Aether Brain]:  {res.get('result')}\n")
+        # Speak response via TTS
+        text = str(res.get('result'))
+        if len(text) < 120 and "PSI Pressure" not in text:
+            send_unix_request(VOICE_SOCK, {"action": "speak", "text": text})
+    else:
+        print("[aetherctl] Unable to connect to Intent Engine.")
+
+def main():
+    if len(sys.argv) < 2:
+        cmd_status()
+        print("Commands:")
+        print("  aetherctl status            Show unified sensory & MCP system health")
+        print("  aetherctl vision            Inspect real-time gaze, fatigue & biometrics")
+        print("  aetherctl voice speak <t>   Synthesize speech via neural/phonetic TTS")
+        print("  aetherctl voice mode <m>    Set voice mode (interactive/meeting_mode)")
+        print("  aetherctl memory store <c>  Store episodic note in vector vault")
+        print("  aetherctl memory search <q> Query memory using cosine vector search")
+        print("  aetherctl memory graph      Inspect user & system knowledge graph")
+        print("  aetherctl intent <prompt>   Route natural language intent (<15ms)")
+        print("  aetherctl chat <prompt>     Ask the onboard SLM Copilot (with TTS)")
+        print("  aetherctl compact           Trigger kernel memory compaction")
+        print("  aetherctl threads           List top active threads")
+        return
+
+    cmd = sys.argv[1]
+    if cmd == "status":
+        cmd_status()
+    elif cmd == "vision":
+        cmd_vision()
+    elif cmd == "voice":
+        cmd_voice(sys.argv[2:])
+    elif cmd == "memory":
+        cmd_memory(sys.argv[2:])
+    elif cmd == "intent":
+        cmd_intent(sys.argv[2:])
+    elif cmd == "chat":
+        prompt = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "diagnose system"
+        cmd_chat(prompt)
+    elif cmd == "compact":
+        res = send_unix_request(MCP_SOCK, {"action": "call_tool", "name": "memory.compact", "args": {}})
+        print(res.get("result") if res else "Compacting memory...")
+    elif cmd == "threads":
+        res = send_unix_request(MCP_SOCK, {"action": "call_tool", "name": "threads.tune", "args": {}})
+        print(json.dumps(res.get("result"), indent=2) if res else "Enumerating threads...")
+    else:
+        # Default to intent routing
+        cmd_intent(sys.argv[1:])
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,16 @@
+[Unit]
+Description=AetherOS Kernel Model Context Protocol Daemon & SLM Intelligence Core
+After=network.target local-fs.target
+DefaultDependencies=no
+Before=basic.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/bin/aether-mcpd
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

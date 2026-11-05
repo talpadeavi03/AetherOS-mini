@@ -1,0 +1,16 @@
+[Unit]
+Description=AetherOS Persistent Episodic Vector Memory Daemon
+After=network.target aether-mcp.service
+Wants=aether-mcp.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/bin/aether-memd
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
