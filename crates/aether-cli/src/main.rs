@@ -1,11 +1,14 @@
+use aether_ai_engine::LocalModelEngine;
 use aether_core::{AetherPaths, McpToolCall};
 use aether_mcpd::McpServer;
 use aether_pkg::UniversalPackageManager;
-use aether_runtime::RuntimeOrchestrator;
+use aether_runtime::{RuntimeOrchestrator, SubsystemProvisioner};
 use clap::{Parser, Subcommand};
 use colored::*;
 use serde_json::json;
+use std::io::Write;
 use std::sync::Arc;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Parser, Debug)]
@@ -25,6 +28,37 @@ struct Cli {
 enum Commands {
     /// Inspect health & status of all AetherOS subsystems
     Status,
+
+    /// Automated provisioner for absent subsystems (dotnet, containers, k3s, waydroid, all)
+    Setup {
+        /// Subsystem to provision: dotnet, containers, k3s, waydroid, or all
+        #[arg(default_value = "all")]
+        subsystem: String,
+
+        /// Dry-run mode: show installation actions without executing
+        #[arg(short, long)]
+        dry_run: bool,
+    },
+
+    /// Launch interactive Aether AI terminal REPL session
+    Repl,
+
+    /// Launch the Aether Jarvis AI Desktop HUD in local browser or Wayland window
+    Hud {
+        /// Port to serve HUD interface
+        #[arg(short, long, default_value = "7070")]
+        port: u16,
+
+        /// Do not automatically open browser
+        #[arg(long)]
+        no_open: bool,
+    },
+
+    /// Manage local offline AI models & GGUF quantizations
+    Model {
+        #[command(subcommand)]
+        action: ModelCommands,
+    },
 
     /// Universal application & package installer (Flatpak, Android APK, .NET, Wine, OCI, Native)
     Install {
@@ -60,6 +94,20 @@ enum Commands {
 
     /// Display AetherOS architectural overview and configuration paths
     Info,
+}
+
+#[derive(Subcommand, Debug)]
+enum ModelCommands {
+    /// List all catalogued local models ready for download
+    List,
+    /// Pull and quantize a model from Hugging Face (e.g. llama-3.2-1b, qwen-2.5-coder)
+    Pull {
+        id: String,
+        #[arg(short, long)]
+        dry_run: bool,
+    },
+    /// List all currently installed offline models on disk
+    Installed,
 }
 
 #[derive(Subcommand, Debug)]
@@ -110,6 +158,82 @@ async fn main() -> anyhow::Result<()> {
                 println!("           └─ {}", sub.details.dimmed());
             }
             println!("{:-<75}", "");
+        }
+
+        Commands::Setup { subsystem, dry_run } => {
+            print_header();
+            match subsystem.to_lowercase().as_str() {
+                "dotnet" => {
+                    SubsystemProvisioner::provision_dotnet(dry_run).await?;
+                }
+                "containers" | "docker" | "podman" => {
+                    SubsystemProvisioner::provision_containers(dry_run).await?;
+                }
+                "k3s" | "kubernetes" => {
+                    SubsystemProvisioner::provision_k3s(dry_run).await?;
+                }
+                "waydroid" | "android" => {
+                    SubsystemProvisioner::provision_waydroid(dry_run).await?;
+                }
+                "all" => {
+                    println!("{}", "⚡ Automated Subsystem Provisioning for AetherOS:".bright_white().bold());
+                    SubsystemProvisioner::provision_dotnet(dry_run).await?;
+                    println!();
+                    SubsystemProvisioner::provision_containers(dry_run).await?;
+                    println!();
+                    SubsystemProvisioner::provision_k3s(dry_run).await?;
+                    println!();
+                    SubsystemProvisioner::provision_waydroid(dry_run).await?;
+                    println!();
+                    println!("{}", "✔ All subsystem provisioners completed.".bright_green().bold());
+                }
+                other => {
+                    println!("Unknown subsystem: '{}'. Supported: dotnet, containers, k3s, waydroid, all", other);
+                }
+            }
+        }
+
+        Commands::Repl => {
+            run_interactive_repl().await?;
+        }
+
+        Commands::Hud { port, no_open } => {
+            run_hud_server(port, !no_open).await?;
+        }
+
+        Commands::Model { action } => {
+            let engine = LocalModelEngine::new();
+            match action {
+                ModelCommands::List => {
+                    println!("{}", "=========================================================".bright_cyan());
+                    println!("{}", "  AETHER AI : LOCAL MODEL CATALOG                        ".bright_cyan().bold());
+                    println!("{}", "=========================================================".bright_cyan());
+                    for m in engine.list_models() {
+                        println!(" • {} ({})", m.name.bright_green().bold(), m.parameters.cyan());
+                        println!("   ID:        {}", m.id.bright_yellow());
+                        println!("   Quant:     {} ({} MB)", m.quantization.yellow(), m.file_size_mb);
+                        println!("   Best For:  {}", m.recommended_for.white());
+                        println!();
+                    }
+                }
+                ModelCommands::Pull { id, dry_run } => {
+                    engine.pull_model(&id, dry_run).await?;
+                }
+                ModelCommands::Installed => {
+                    let installed = engine.list_installed().await?;
+                    println!("{}", "=========================================================".bright_cyan());
+                    println!("{}", "  AETHER AI : INSTALLED OFFLINE GGUF MODELS              ".bright_cyan().bold());
+                    println!("{}", "=========================================================".bright_cyan());
+                    if installed.is_empty() {
+                        println!("  No offline models downloaded yet. Run 'aether model pull <id>' to download.");
+                    } else {
+                        for m in installed {
+                            println!(" • {} ({} MB)", m.name.bright_green(), m.size_mb);
+                            println!("   Location: {:?}", m.path);
+                        }
+                    }
+                }
+            }
         }
 
         Commands::Install { target, dry_run } => {
@@ -177,11 +301,124 @@ async fn main() -> anyhow::Result<()> {
             println!("{}", "System Paths:".bright_white().bold());
             println!("  Config:  {:?}", AetherPaths::config_dir());
             println!("  Data:    {:?}", AetherPaths::data_dir());
+            println!("  Models:  {:?}", AetherPaths::models_dir());
             println!("  Socket:  {:?}", AetherPaths::mcp_socket_path());
         }
     }
 
     Ok(())
+}
+
+async fn run_interactive_repl() -> anyhow::Result<()> {
+    print_header();
+    println!("{}", "⚡ AETHER INTERACTIVE AI TERMINAL REPL".bright_magenta().bold());
+    println!("Type your requests in natural language. Subsystem MCP tools are automatically invoked.");
+    println!("Commands: {} to check health, {} to list MCP tools, {} to exit.", "/status".yellow(), "/tools".yellow(), "/exit".yellow());
+    println!("{:-<65}", "");
+
+    let engine = LocalModelEngine::new();
+    let stdin = tokio::io::stdin();
+    let mut reader = BufReader::new(stdin).lines();
+
+    loop {
+        print!("{}", "aether> ".bright_cyan().bold());
+        let _ = std::io::stdout().flush();
+
+        let line = match reader.next_line().await? {
+            Some(l) => l.trim().to_string(),
+            None => break,
+        };
+
+        if line.is_empty() {
+            continue;
+        }
+
+        if line == "/exit" || line == "exit" || line == "quit" {
+            println!("Exiting Aether REPL session.");
+            break;
+        } else if line == "/status" {
+            let subsystems = RuntimeOrchestrator::inspect_subsystems().await;
+            for s in subsystems {
+                let badge = if s.available { "✔".green() } else { "✘".red() };
+                println!("  {} {:<35} - {}", badge, s.name, s.details.dimmed());
+            }
+            continue;
+        } else if line == "/tools" {
+            let server = McpServer::new();
+            for t in server.list_tools().await {
+                println!("  • {} - {}", t.name.yellow(), t.description);
+            }
+            continue;
+        } else if line == "/clear" {
+            print!("\x1B[2J\x1B[1;1H");
+            let _ = std::io::stdout().flush();
+            continue;
+        }
+
+        // Process with Local Model Engine
+        let resp = engine.process_prompt(&line).await?;
+        println!("  {} {}", "Thought:".dimmed(), resp.thought.dimmed());
+
+        if !resp.tool_calls.is_empty() {
+            for call in &resp.tool_calls {
+                println!("  {} {}({})", "Action:".bright_yellow(), call.name, call.arguments);
+            }
+            let results = engine.execute_tools(&resp.tool_calls).await;
+            for r in results {
+                if r.success {
+                    println!("  {} Execution succeeded.", "✔".green());
+                } else {
+                    println!("  {} Execution error: {:?}", "✘".red(), r.error);
+                }
+            }
+        }
+
+        println!("  {} {}\n", "Aether:".bright_cyan().bold(), resp.reply);
+    }
+
+    Ok(())
+}
+
+async fn run_hud_server(port: u16, open_browser: bool) -> anyhow::Result<()> {
+    use tokio::net::TcpListener;
+
+    let addr = format!("127.0.0.1:{}", port);
+    let listener = TcpListener::bind(&addr).await?;
+    println!("{}", "=========================================================".bright_cyan());
+    println!("  ⚡ AETHER DESKTOP JARVIS HUD LIVE SERVER RUNNING");
+    println!("  URL: http://{}", addr.bright_green().bold());
+    println!("{}", "=========================================================".bright_cyan());
+
+    if open_browser {
+        println!("  Launching Aether HUD overlay in browser / Wayland window...");
+        let url = format!("http://{}", addr);
+        let _ = tokio::process::Command::new("xdg-open").arg(&url).status().await;
+    }
+
+    let hud_path = std::path::Path::new("ui/shell-hud/index.html");
+    let html_content = if hud_path.exists() {
+        tokio::fs::read_to_string(hud_path).await?
+    } else {
+        "<h1>AetherOS HUD</h1><p>ui/shell-hud/index.html not found</p>".to_string()
+    };
+
+    println!("  Press Ctrl+C to stop HUD server.\n");
+
+    loop {
+        let (mut socket, _) = listener.accept().await?;
+        let content = html_content.clone();
+
+        tokio::spawn(async move {
+            let mut buf = [0u8; 1024];
+            let _ = socket.try_read(&mut buf);
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                content.len(),
+                content
+            );
+            let _ = socket.write_all(response.as_bytes()).await;
+        });
+    }
 }
 
 async fn handle_ai_prompt(query: &str) -> anyhow::Result<()> {

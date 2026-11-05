@@ -122,6 +122,10 @@ impl AetherPaths {
         dirs_fallback(".local/share/aether")
     }
 
+    pub fn models_dir() -> PathBuf {
+        Self::data_dir().join("models")
+    }
+
     pub fn mcp_socket_path() -> PathBuf {
         if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
             PathBuf::from(runtime_dir).join("aether-mcp.sock")

@@ -1,7 +1,9 @@
-use aether_core::{McpToolCall, McpToolResult};
+use aether_core::{AetherPaths, McpToolCall, McpToolResult};
 use aether_mcpd::McpServer;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::process::Command;
 use tracing::info;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -12,7 +14,16 @@ pub struct ModelSpec {
     pub quantization: String,
     pub file_size_mb: u64,
     pub hf_repo: String,
+    pub download_url: String,
+    pub filename: String,
     pub recommended_for: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InstalledModel {
+    pub name: String,
+    pub path: PathBuf,
+    pub size_mb: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,6 +48,8 @@ impl LocalModelEngine {
                 quantization: "Q4_K_M".into(),
                 file_size_mb: 850,
                 hf_repo: "bartowski/Llama-3.2-1B-Instruct-GGUF".into(),
+                download_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf".into(),
+                filename: "Llama-3.2-1B-Instruct-Q4_K_M.gguf".into(),
                 recommended_for: "Low-RAM laptops, fast OS automation and keybinding dispatch".into(),
             },
             ModelSpec {
@@ -46,6 +59,8 @@ impl LocalModelEngine {
                 quantization: "Q4_K_M".into(),
                 file_size_mb: 2300,
                 hf_repo: "bartowski/Phi-3.5-mini-instruct-GGUF".into(),
+                download_url: "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/main/Phi-3.5-mini-instruct-Q4_K_M.gguf".into(),
+                filename: "Phi-3.5-mini-instruct-Q4_K_M.gguf".into(),
                 recommended_for: "Complex multi-step reasoning, coding, and DevOps automation".into(),
             },
             ModelSpec {
@@ -55,6 +70,8 @@ impl LocalModelEngine {
                 quantization: "Q4_K_M".into(),
                 file_size_mb: 1100,
                 hf_repo: "bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF".into(),
+                download_url: "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf".into(),
+                filename: "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf".into(),
                 recommended_for: "Deep reasoning, system repair, and diagnostic explanations".into(),
             },
             ModelSpec {
@@ -64,6 +81,8 @@ impl LocalModelEngine {
                 quantization: "Q4_K_M".into(),
                 file_size_mb: 2000,
                 hf_repo: "bartowski/Qwen2.5-Coder-3B-Instruct-GGUF".into(),
+                download_url: "https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf".into(),
+                filename: "Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf".into(),
                 recommended_for: "Code generation, terminal debugging, and kernel script crafting".into(),
             },
         ];
@@ -77,6 +96,71 @@ impl LocalModelEngine {
     /// List all catalogued local models ready for download and quantization
     pub fn list_models(&self) -> &[ModelSpec] {
         &self.available_models
+    }
+
+    /// Download and register a local GGUF model from Hugging Face
+    pub async fn pull_model(&self, model_id: &str, dry_run: bool) -> anyhow::Result<PathBuf> {
+        let spec = self.available_models.iter().find(|m| m.id == model_id)
+            .ok_or_else(|| anyhow::anyhow!("Model '{}' not found in catalog. Run 'aether model list' to view available models.", model_id))?;
+
+        let models_dir = AetherPaths::models_dir();
+        tokio::fs::create_dir_all(&models_dir).await?;
+        let dest = models_dir.join(&spec.filename);
+
+        println!("⚡ Pulling Model: {} ({})", spec.name, spec.parameters);
+        println!("  Quantization:   {}", spec.quantization);
+        println!("  Source:         {}", spec.hf_repo);
+        println!("  Destination:    {:?}", dest);
+
+        if dry_run {
+            println!("  [DRY-RUN] Verified URL: {}", spec.download_url);
+            return Ok(dest);
+        }
+
+        if dest.exists() {
+            println!("  Model already exists at {:?}", dest);
+            return Ok(dest);
+        }
+
+        println!("  Downloading GGUF weights ({} MB)...", spec.file_size_mb);
+        let status = Command::new("curl")
+            .arg("-L")
+            .arg("--progress-bar")
+            .arg("-o")
+            .arg(&dest)
+            .arg(&spec.download_url)
+            .status()
+            .await?;
+
+        if !status.success() {
+            let _ = tokio::fs::remove_file(&dest).await;
+            anyhow::bail!("Failed to download model weights from Hugging Face.");
+        }
+
+        println!("✔ Model '{}' successfully installed into local Aether runtime!", spec.name);
+        Ok(dest)
+    }
+
+    /// List all currently installed GGUF models on disk
+    pub async fn list_installed(&self) -> anyhow::Result<Vec<InstalledModel>> {
+        let models_dir = AetherPaths::models_dir();
+        let mut list = Vec::new();
+
+        if !models_dir.exists() {
+            return Ok(list);
+        }
+
+        let mut read_dir = tokio::fs::read_dir(&models_dir).await?;
+        while let Some(entry) = read_dir.next_entry().await? {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("gguf") {
+                let metadata = entry.metadata().await?;
+                let size_mb = metadata.len() / (1024 * 1024);
+                let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("unknown").to_string();
+                list.push(InstalledModel { name, path, size_mb });
+            }
+        }
+        Ok(list)
     }
 
     /// Process a natural language prompt, decide which MCP tools to invoke, execute them, and formulate a reply

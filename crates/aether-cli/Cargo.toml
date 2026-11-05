@@ -14,6 +14,8 @@ aether-core = { path = "../aether-core" }
 aether-pkg = { path = "../aether-pkg" }
 aether-runtime = { path = "../aether-runtime" }
 aether-mcpd = { path = "../aether-mcpd" }
+aether-ai-engine = { path = "../aether-ai-engine" }
+aether-shell = { path = "../aether-shell" }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
