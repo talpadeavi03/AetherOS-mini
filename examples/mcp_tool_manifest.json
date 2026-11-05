@@ -1,0 +1,42 @@
+{
+  "$schema": "https://aetheros.org/schemas/mcp-tool-manifest.v1.json",
+  "app_id": "org.aetheros.code-editor",
+  "name": "Aether Editor",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "editor_open_file",
+      "description": "Opens a source code or markdown file inside the active Aether Editor workspace",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Absolute or relative file path to open"
+          },
+          "line_number": {
+            "type": "integer",
+            "description": "Optional line number to jump cursor to"
+          }
+        },
+        "required": ["file_path"]
+      }
+    },
+    {
+      "name": "editor_apply_diff",
+      "description": "Applies a unified patch/diff directly to the active editor buffer with instant undo support",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string"
+          },
+          "diff_patch": {
+            "type": "string"
+          }
+        },
+        "required": ["file_path", "diff_patch"]
+      }
+    }
+  ]
+}

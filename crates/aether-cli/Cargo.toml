@@ -1,0 +1,24 @@
+[package]
+name = "aether-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "aether"
+path = "src/main.rs"
+
+[dependencies]
+aether-core = { path = "../aether-core" }
+aether-pkg = { path = "../aether-pkg" }
+aether-runtime = { path = "../aether-runtime" }
+aether-mcpd = { path = "../aether-mcpd" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+colored.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
