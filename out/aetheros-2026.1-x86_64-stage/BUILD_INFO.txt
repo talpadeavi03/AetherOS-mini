@@ -1,0 +1,5 @@
+AetherOS Version: 2026.1-alpha
+Kernel Target: Linux Zen 6.x+
+Display: Wayland / Hyprland
+Runtimes: Waydroid, Wine-Staging, .NET CoreCLR, containerd, k3s
+AI Core: AetherMCP Bus + Local Model Engine

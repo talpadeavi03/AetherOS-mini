@@ -6,6 +6,8 @@ members = [
     "crates/aether-runtime",
     "crates/aether-mcpd",
     "crates/aether-cli",
+    "crates/aether-shell",
+    "crates/aether-ai-engine",
 ]
 
 [workspace.package]

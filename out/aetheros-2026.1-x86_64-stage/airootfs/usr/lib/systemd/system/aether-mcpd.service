@@ -1,0 +1,13 @@
+[Unit]
+Description=AetherOS Model Context Protocol System Bus
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/aether-mcpd
+Restart=always
+RestartSec=2
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=multi-user.target

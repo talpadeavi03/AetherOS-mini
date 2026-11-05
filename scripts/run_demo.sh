@@ -37,11 +37,21 @@ echo ">> Querying AetherOS MCP System Tools:"
 "$BIN" mcp tools
 echo
 
-# 5. Aether AI Interface
+# 5. Local Model Engine & Quantization Profiles
+echo ">> Querying AetherOS Local Model Catalog & Quantization Profiles:"
+"$DIR/target/release/aether-ai" --models
+echo
+
+# 6. Aether AI Interface
 echo ">> Testing Natural Language OS AI Interface:"
 "$BIN" ai "Show system health status"
 echo
 "$BIN" ai "Install com.spotify.music.apk"
+echo
+
+# 7. Aether Shell Telemetry
+echo ">> Testing Aether Shell IPC Telemetry Bridge:"
+"$DIR/target/release/aether-ai" "Show system status across all runtimes"
 echo
 
 echo "=== Demonstration Completed Successfully ==="

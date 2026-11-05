@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherOS Shell - Jarvis AI HUD</title>
+  <style>
+    :root {
+      --bg-base: #07090e;
+      --panel-bg: rgba(14, 20, 32, 0.75);
+      --panel-border: rgba(0, 229, 255, 0.25);
+      --accent-cyan: #00e5ff;
+      --accent-magenta: #e040fb;
+      --accent-green: #00e676;
+      --accent-yellow: #ffd600;
+      --text-main: #f0f4f8;
+      --text-dim: #78909c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+    body {
+      background: radial-gradient(circle at 50% 20%, #0d1b2a 0%, var(--bg-base) 80%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 28px;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--accent-cyan);
+    }
+    .brand span { color: var(--text-main); font-weight: 300; font-size: 0.85em; }
+
+    .subsystems-pills {
+      display: flex;
+      gap: 10px;
+    }
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill.active::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    /* Floating AI Command Center */
+    .ai-hero {
+      max-width: 900px;
+      margin: 40px auto 20px auto;
+      width: 90%;
+      text-align: center;
+    }
+    .ai-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(90deg, #00e5ff, #e040fb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .ai-bar-container {
+      position: relative;
+      background: var(--panel-bg);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 16px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+      backdrop-filter: blur(20px);
+    }
+    .ai-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      padding: 12px 16px;
+      outline: none;
+    }
+    .ai-btn {
+      background: linear-gradient(135deg, #00e5ff, #00b0ff);
+      color: #07090e;
+      border: none;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ai-btn:hover {
+      box-shadow: 0 0 16px var(--accent-cyan);
+      transform: scale(1.02);
+    }
+
+    /* Main Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap: 20px;
+      padding: 20px 28px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 20px;
+      backdrop-filter: blur(12px);
+    }
+    .card h3 {
+      font-size: 0.95rem;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Telemetry Gauges */
+    .gauge-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+    }
+    .gauge-bar-bg {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .gauge-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent-cyan);
+      transition: width 0.5s ease;
+    }
+
+    /* App Hub */
+    .app-category-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .tab-btn.active {
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.1);
+    }
+
+    .app-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .app-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .app-item:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.05);
+      transform: translateY(-2px);
+    }
+    .app-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .app-name { font-size: 0.85rem; font-weight: 600; }
+    .app-runtime-tag { font-size: 0.65rem; color: var(--accent-magenta); margin-top: 4px; }
+
+    /* MCP Stream Console */
+    .console-logs {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #a0aec0;
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      padding: 12px;
+      height: 240px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+    .console-logs .log-time { color: var(--accent-cyan); margin-right: 6px; }
+    .console-logs .log-tool { color: var(--accent-yellow); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="brand">
+      ⬡ AETHER-OS
+      <span>// AI-NATIVE SHELL</span>
+    </div>
+    <div class="subsystems-pills">
+      <div class="pill active">Linux Kernel 7.0</div>
+      <div class="pill active">Android (Waydroid)</div>
+      <div class="pill active">.NET CoreCLR</div>
+      <div class="pill active">Wine/Proton</div>
+      <div class="pill active">OCI & K3s</div>
+      <div class="pill active">AetherMCP Bus</div>
+    </div>
+  </header>
+
+  <!-- Jarvis AI Floating Center -->
+  <div class="ai-hero">
+    <div class="ai-title">Aether Jarvis Assistant</div>
+    <div class="ai-bar-container">
+      <input type="text" id="aiInput" class="ai-input" placeholder="Ask Aether: 'Install Spotify', 'Run Redis', 'Show cluster status'...">
+      <button class="ai-btn" onclick="executeAiQuery()">Dispatch AI</button>
+    </div>
+  </div>
+
+  <!-- Main Dashboard -->
+  <main class="dashboard-grid">
+    <!-- Left Column: Hardware Telemetry -->
+    <section class="card">
+      <h3>Hardware & Kernel <span style="font-size: 0.7em; color: var(--accent-green);">ONLINE</span></h3>
+      
+      <div>
+        <div class="gauge-row">
+          <span>GPU Load (Vulkan/CUDA)</span>
+          <span id="gpuText">18%</span>
+        </div>
+        <div class="gauge-bar-bg"><div id="gpuBar" class="gauge-bar-fill" style="width: 18%;"></div></div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <div class="gauge-row">
+          <span>CPU Compute</span>
+          <span id="cpuText">14%</span>
+        </div>
+        <div class="gauge-bar-bg"><div id="cpuBar" class="gauge-bar-fill" style="width: 14%; background: var(--accent-yellow);"></div></div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <div class="gauge-row">
+          <span>RAM Utilization</span>
+          <span id="ramText">3.4 / 16.0 GB</span>
+        </div>
+        <div class="gauge-bar-bg"><div id="ramBar" class="gauge-bar-fill" style="width: 22%; background: var(--accent-magenta);"></div></div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 20px 0;">
+
+      <h3>Active Containers & K3s</h3>
+      <div style="font-size: 0.85rem; line-height: 1.8;">
+        <div>● <b>k3s-control-plane:</b> <span style="color:var(--accent-green);">Running</span></div>
+        <div>● <b>aether-mcpd.service:</b> <span style="color:var(--accent-green);">Active</span></div>
+        <div>● <b>waydroid-container:</b> <span style="color:var(--accent-green);">Ready</span></div>
+      </div>
+    </section>
+
+    <!-- Center Column: Multi-Runtime App Hub -->
+    <section class="card">
+      <h3>Universal Application Hub</h3>
+      <div class="app-category-tabs">
+        <button class="tab-btn active">All Ecosystems</button>
+        <button class="tab-btn">Android (Waydroid)</button>
+        <button class="tab-btn">.NET CoreCLR</button>
+        <button class="tab-btn">Windows / Proton</button>
+        <button class="tab-btn">Containers</button>
+      </div>
+
+      <div class="app-cards">
+        <div class="app-item" onclick="launchApp('VSCode', 'Flatpak')">
+          <div class="app-icon">💻</div>
+          <div class="app-name">VS Code</div>
+          <div class="app-runtime-tag">Flatpak Sandbox</div>
+        </div>
+
+        <div class="app-item" onclick="launchApp('Spotify', 'Android')">
+          <div class="app-icon">🎵</div>
+          <div class="app-name">Spotify</div>
+          <div class="app-runtime-tag">Waydroid APK</div>
+        </div>
+
+        <div class="app-item" onclick="launchApp('Avalonia Studio', '.NET')">
+          <div class="app-icon">⚡</div>
+          <div class="app-name">Avalonia UI</div>
+          <div class="app-runtime-tag">.NET CoreCLR</div>
+        </div>
+
+        <div class="app-item" onclick="launchApp('Steam', 'Proton')">
+          <div class="app-icon">🎮</div>
+          <div class="app-name">Steam Proton</div>
+          <div class="app-runtime-tag">DXVK / Vulkan</div>
+        </div>
+
+        <div class="app-item" onclick="launchApp('Redis Stack', 'OCI')">
+          <div class="app-icon">📦</div>
+          <div class="app-name">Redis Stack</div>
+          <div class="app-runtime-tag">OCI Container</div>
+        </div>
+
+        <div class="app-item" onclick="launchApp('Blender', 'Linux')">
+          <div class="app-icon">🎨</div>
+          <div class="app-name">Blender 3D</div>
+          <div class="app-runtime-tag">Linux Native</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: System MCP Bus & Telemetry -->
+    <section class="card">
+      <h3>AetherMCP System Stream</h3>
+      <div id="consoleLogs" class="console-logs">
+        <div><span class="log-time">[19:15:00]</span> Aether MCP Daemon initialized.</div>
+        <div><span class="log-time">[19:15:01]</span> Registered tool <span class="log-tool">os_system_status</span>.</div>
+        <div><span class="log-time">[19:15:01]</span> Registered tool <span class="log-tool">os_package_install</span>.</div>
+        <div><span class="log-time">[19:15:01]</span> Registered tool <span class="log-tool">os_app_launch</span>.</div>
+        <div><span class="log-time">[19:15:02]</span> Waydroid Binder IPC bridge connected.</div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <button class="ai-btn" style="width: 100%; font-size: 0.85rem;" onclick="triggerAutomation()">Run AI Automation Pipeline</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function log(tool, msg) {
+      const el = document.getElementById('consoleLogs');
+      const time = new Date().toTimeString().split(' ')[0];
+      const div = document.createElement('div');
+      div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-tool">${tool}</span>: ${msg}`;
+      el.appendChild(div);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function executeAiQuery() {
+      const query = document.getElementById('aiInput').value.trim();
+      if (!query) return;
+      log("AetherAI", `Interpreting query: "${query}"`);
+      setTimeout(() => {
+        log("MCP:os_package_install", `Resolved optimal sandbox & runtime for target.`);
+        log("AetherOS", `Action executed successfully.`);
+      }, 600);
+      document.getElementById('aiInput').value = '';
+    }
+
+    function launchApp(name, runtime) {
+      log("MCP:os_app_launch", `Dispatching ${name} through ${runtime} runtime.`);
+    }
+
+    function triggerAutomation() {
+      log("MCP:os_automate", `Executing workflow: Fetch Invoice -> OCR -> Commit Git -> Notify`);
+    }
+
+    // Auto-update telemetry jitter for realistic display
+    setInterval(() => {
+      const gpu = 15 + Math.floor(Math.random() * 12);
+      const cpu = 10 + Math.floor(Math.random() * 15);
+      document.getElementById('gpuText').innerText = gpu + '%';
+      document.getElementById('gpuBar').style.width = gpu + '%';
+      document.getElementById('cpuText').innerText = cpu + '%';
+      document.getElementById('cpuBar').style.width = cpu + '%';
+    }, 2500);
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+# ==============================================================================
+# AetherOS Core Package Manifest (Arch Linux Base)
+# ==============================================================================
+
+# Core System & Hardware Abstraction Layer
+base
+base-devel
+linux-zen
+linux-zen-headers
+linux-firmware
+sof-firmware
+btrfs-progs
+e2fsprogs
+dosfstools
+efibootmgr
+grub
+systemd
+networkmanager
+iwd
+bluez
+bluez-utils
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+
+# Graphics & Wayland Compositor Stack
+mesa
+vulkan-radeon
+vulkan-intel
+nvidia-open-dkms
+nvidia-utils
+egl-wayland
+hyprland
+waybar
+wofi
+foot
+xdg-desktop-portal-hyprland
+qt6-wayland
+polkit-kde-agent
+
+# Android Subsystem (Waydroid)
+waydroid
+lxc
+dnsmasq
+iptables-nft
+
+# Windows & .NET Subsystems
+wine-staging
+winetricks
+dxvk-bin
+vkd3d
+dotnet-runtime
+dotnet-sdk
+
+# Cloud Native & Containers
+containerd
+runc
+docker
+docker-compose
+kubectl
+helm
+
+# AI & Developer Tools
+python
+python-pip
+git
+curl
+wget
+jq
+htop
+neovim
+calamares
+calamares-branding-arch

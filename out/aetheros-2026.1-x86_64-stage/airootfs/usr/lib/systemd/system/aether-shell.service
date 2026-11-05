@@ -1,0 +1,13 @@
+[Unit]
+Description=AetherOS Wayland Compositor & Shell AI Bridge
+After=graphical.target aether-mcpd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/aether-shell
+Restart=always
+RestartSec=2
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=graphical.target
