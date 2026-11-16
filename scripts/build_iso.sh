@@ -39,16 +39,48 @@ echo "  • Systemd units: aether-mcpd.service, aether-shell.service"
 
 echo "[4/4] Generating ISO image..."
 if command -v mkarchiso &>/dev/null; then
-    echo "Host has 'mkarchiso'. Building production bootable ISO..."
+    echo "Host has 'mkarchiso'. Preparing production Archiso profile..."
+    PROFILE_WORK="/tmp/aether-archiso-profile"
+    rm -rf "${PROFILE_WORK}"
+
+    if [ -d /usr/share/archiso/configs/releng ]; then
+        echo "Using Arch Linux releng profile as baseline..."
+        cp -r /usr/share/archiso/configs/releng "${PROFILE_WORK}"
+    else
+        mkdir -p "${PROFILE_WORK}"
+        cp -r "${ISO_DIR}"/* "${PROFILE_WORK}/"
+    fi
+
+    # Ensure pacman.conf exists
+    if [ ! -f "${PROFILE_WORK}/pacman.conf" ] && [ -f /etc/pacman.conf ]; then
+        cp /etc/pacman.conf "${PROFILE_WORK}/pacman.conf"
+    fi
+
+    # Overlay AetherOS airootfs
+    cp -rf "${ISO_DIR}/airootfs"/* "${PROFILE_WORK}/airootfs/"
+    mkdir -p "${PROFILE_WORK}/airootfs/usr/local/bin"
+    cp -vf "${AIROOTFS_BIN}"/* "${PROFILE_WORK}/airootfs/usr/local/bin/"
+    chmod +x "${PROFILE_WORK}/airootfs/usr/local/bin/"*
+
+    # Append custom AetherOS packages from manifest (filtering comments and AUR-only packages)
+    if [ -f "${ISO_DIR}/packages.x86_64" ]; then
+        grep -vE '^\s*#|^\s*$|dxvk-bin|calamares-branding-arch' "${ISO_DIR}/packages.x86_64" >> "${PROFILE_WORK}/packages.x86_64" || true
+        sort -u "${PROFILE_WORK}/packages.x86_64" -o "${PROFILE_WORK}/packages.x86_64"
+    fi
+
+    # Update profile metadata
+    sed -i 's/iso_name=.*/iso_name="aetheros"/' "${PROFILE_WORK}/profiledef.sh" 2>/dev/null || true
+    sed -i 's/iso_label=.*/iso_label="AETHEROS"/' "${PROFILE_WORK}/profiledef.sh" 2>/dev/null || true
+
     WORK_DIR="/tmp/aether-iso-work"
     rm -rf "${WORK_DIR}"
-    mkarchiso -v -w "${WORK_DIR}" -o "${OUTPUT_DIR}" "${ISO_DIR}"
+    echo "Invoking mkarchiso to build production bootable image..."
+    mkarchiso -v -w "${WORK_DIR}" -o "${OUTPUT_DIR}" "${PROFILE_WORK}"
     echo "✔ ISO generated successfully in: ${OUTPUT_DIR}"
 else
     echo "Notice: 'mkarchiso' is native to Arch Linux."
     echo "Preparing simulated ISO build artifacts and verification bundle..."
     
-    # Create verification bundle
     BUNDLE_NAME="aetheros-2026.1-x86_64-stage"
     STAGE_DIR="${OUTPUT_DIR}/${BUNDLE_NAME}"
     rm -rf "${STAGE_DIR}"

@@ -4,17 +4,15 @@
 # ==============================================================================
 
 iso_name="aetheros"
-iso_label="AETHER_$(date +%Y%m)"
+iso_label="AETHEROS"
 iso_publisher="AetherOS Core Foundation <https://aetheros.org>"
 iso_application="AetherOS Live / Installation ISO"
 iso_version="2026.1-alpha"
 install_dir="arch"
 buildmodes=('iso')
 bootmodes=(
-    'bios.syslinux.mbr'
-    'bios.syslinux.eltorito'
-    'uefi-x64.systemd-boot.esp'
-    'uefi-x64.systemd-boot.eltorito'
+    'bios.syslinux'
+    'uefi.systemd-boot'
 )
 arch="x86_64"
 pacman_conf="pacman.conf"
