@@ -14,4 +14,3 @@ thiserror.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 colored.workspace = true
-async-trait.workspace = true

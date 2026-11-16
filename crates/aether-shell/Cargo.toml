@@ -12,7 +12,6 @@ path = "src/main.rs"
 [dependencies]
 aether-core = { path = "../aether-core" }
 aether-runtime = { path = "../aether-runtime" }
-aether-mcpd = { path = "../aether-mcpd" }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
