@@ -1,0 +1,68 @@
+name: AetherOS CI & ISO Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-verify:
+    name: 🦀 Cargo Build & Core Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build All Crates (Release)
+        run: cargo build --release
+
+      - name: Run Workspace Tests
+        run: cargo test --release
+
+      - name: Run AetherOS Subsystem & MCP Demonstration
+        run: ./scripts/run_demo.sh
+
+  build-bootable-iso:
+    name: 💿 Archiso Build & Live Image Generation
+    needs: build-and-verify
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Build Dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm archiso rust cargo bash coreutils git
+
+      - name: Build AetherOS Bootable ISO
+        run: |
+          ./scripts/build_iso.sh
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aetheros-live-iso
+          path: out/
+          if-no-files-found: warn

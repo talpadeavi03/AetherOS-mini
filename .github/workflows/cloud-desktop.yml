@@ -1,0 +1,113 @@
+name: Cloud Desktop (Free & Unlimited)
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration_hours:
+        description: 'Session duration in hours (max 6)'
+        required: true
+        default: '6'
+
+jobs:
+  interactive-desktop:
+    name: 🖥️ Launch Interactive Cloud Desktop
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # GitHub Actions maximum is 6 hours per job
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build AetherOS Binaries
+        run: |
+          cargo build --release
+          mkdir -p bin
+          cp target/release/aether* bin/ 2>/dev/null || true
+
+      - name: Install Desktop Environment & Virtual X Server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb \
+            x11vnc \
+            novnc \
+            websockify \
+            xfce4 \
+            xfce4-terminal \
+            dbus-x11 \
+            curl \
+            jq
+
+      - name: Install Cloudflare Tunnel (cloudflared)
+        run: |
+          curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+          sudo dpkg -i cloudflared.deb
+          rm cloudflared.deb
+
+      - name: Launch Virtual Display & Web VNC
+        run: |
+          # 1. Start virtual display on :99
+          Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset &
+          sleep 2
+
+          # 2. Start lightweight desktop in background
+          DISPLAY=:99 dbus-launch --exit-with-session startxfce4 &
+          sleep 3
+
+          # 3. Create index.html alias for novnc so root URL connects directly
+          if [ -d /usr/share/novnc ]; then
+            sudo ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
+          fi
+
+          # 4. Start VNC and WebSockets bridge
+          x11vnc -display :99 -forever -shared -nopw -rfbport 5900 -quiet &
+          websockify --web /usr/share/novnc/ 6080 localhost:5900 &
+          sleep 2
+
+      - name: Expose Desktop & Generate Public Web Link
+        run: |
+          # Start cloudflared quick tunnel and capture the public URL
+          cloudflared tunnel --url http://localhost:6080 --logfile /tmp/cloudflared.log &
+          
+          echo "Waiting for Cloudflare Tunnel URL..."
+          TUNNEL_URL=""
+          for i in {1..30}; do
+            TUNNEL_URL=$(grep -o 'https://[-a-zA-Z0-9.]*\.trycloudflare\.com' /tmp/cloudflared.log | head -n 1 || true)
+            if [ -n "$TUNNEL_URL" ]; then
+              break
+            fi
+            sleep 2
+          done
+
+          if [ -z "$TUNNEL_URL" ]; then
+            echo "::error::Could not obtain Cloudflare Tunnel URL. Check /tmp/cloudflared.log:"
+            cat /tmp/cloudflared.log
+            exit 1
+          fi
+
+          ACCESS_LINK="${TUNNEL_URL}/vnc.html?autoconnect=true&resize=remote"
+
+          echo "================================================================="
+          echo "🎉 CLOUD DESKTOP IS LIVE! 🎉"
+          echo "Access URL: ${ACCESS_LINK}"
+          echo "================================================================="
+
+          # Write to GitHub Actions Job Summary (renders clickable link in the UI)
+          echo "## 🖥️ AetherOS Interactive Cloud Desktop" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Your cloud desktop is active with 2 vCPUs, 7 GB RAM, and a full 1080p virtual display." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "👉 **[Click Here to Open Cloud Desktop](${ACCESS_LINK})**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Direct URL:** \`${ACCESS_LINK}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Session Duration:** ${{ github.event.inputs.duration_hours }} hour(s)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cost:** \$0 (Public Repo Unlimited Minutes)" >> $GITHUB_STEP_SUMMARY
+
+          # Keep the session running for the requested duration
+          HOURS=${{ github.event.inputs.duration_hours }}
+          SECONDS=$((HOURS * 3600))
+          echo "Session will remain active for ${HOURS} hour(s) (${SECONDS} seconds)..."
+          sleep "${SECONDS}"
