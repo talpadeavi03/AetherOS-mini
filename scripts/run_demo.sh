@@ -2,9 +2,28 @@
 set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BIN="$DIR/target/debug/aether"
+
+# Auto-detect release or debug binaries
+if [ -f "$DIR/target/release/aether" ]; then
+    BIN="$DIR/target/release/aether"
+elif [ -f "$DIR/target/debug/aether" ]; then
+    BIN="$DIR/target/debug/aether"
+else
+    echo ">> Aether binary not found. Building release binary..."
+    cargo build --release --manifest-path "$DIR/Cargo.toml"
+    BIN="$DIR/target/release/aether"
+fi
+
+if [ -f "$DIR/target/release/aether-ai" ]; then
+    AI_BIN="$DIR/target/release/aether-ai"
+elif [ -f "$DIR/target/debug/aether-ai" ]; then
+    AI_BIN="$DIR/target/debug/aether-ai"
+else
+    AI_BIN="$BIN" # fallback
+fi
 
 echo "=== AetherOS Live Demonstration ==="
+echo "Using binary: $BIN"
 echo
 
 # 1. System Info & Architecture
@@ -39,7 +58,7 @@ echo
 
 # 5. Local Model Engine & Quantization Profiles
 echo ">> Querying AetherOS Local Model Catalog & Quantization Profiles:"
-"$DIR/target/release/aether-ai" --models
+"$AI_BIN" --models
 echo
 
 # 6. Aether AI Interface
@@ -51,7 +70,7 @@ echo
 
 # 7. Aether Shell Telemetry
 echo ">> Testing Aether Shell IPC Telemetry Bridge:"
-"$DIR/target/release/aether-ai" "Show system status across all runtimes"
+"$AI_BIN" "Show system status across all runtimes"
 echo
 
 echo "=== Demonstration Completed Successfully ==="
